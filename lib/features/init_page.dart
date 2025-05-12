@@ -6,6 +6,7 @@ import 'package:rempahapp/features/auth/auth_controller.dart';
 import 'package:rempahapp/models/global_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../shared/shared.dart';
 
 class InitPage extends StatefulWidget {
   const InitPage({super.key});
@@ -43,22 +44,22 @@ class _InitPageState extends State<InitPage> {
     final GlobalState gs = Get.find();
     final SharedPreferences sp = await SharedPreferences.getInstance();
     final token = sp.getString('token');
-    final ApiV1 apiV1 = ApiV1();
 
     await pushMessage(Text('Checking Token ...'));
     if (token != null) {
-      final apiDomain = sp.getString('api_domain');
       gs.setToken(token);
-
-      await pushMessage(Text('Connecting to server: $apiDomain'));
+      final ApiV1 apiV1 = ApiV1(bearerToken: token);
 
       //VALIDATE TOKEN
       await pushMessage(Text('Get User Info: ${token.substring(0, 8)}...'));
-      var token_info = await apiV1.checkToken(token);
+      var token_info = await apiV1.getUser();
+      aLog(token_info);
       if (token_info['error'] == 0) {
         var userInfo = token_info['data'];
         await pushMessage(Text('Retreived User Info ... '));
-        await pushMessage(Text(userInfo['emp_name'] + ' ' + userInfo['emp_code'] + '✅'));
+        await pushMessage(
+          Text(userInfo['name'] + ' ' + userInfo['email'] + '✅'),
+        );
         // gs.setEmp(user['data']);
         // aLog(user);
       }
@@ -86,10 +87,7 @@ class _InitPageState extends State<InitPage> {
                       width: 100,
                     ),
                   ),
-                  const SpinKitRipple(
-                    color: Colors.white,
-                    size: 80,
-                  ),
+                  const SpinKitRipple(color: Colors.white, size: 80),
                   const SizedBox(height: 30),
                   ...listsMessages, // Unpack the list of widgets
                 ],

@@ -3,13 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-
-import 'package:get/get.dart';
 import 'package:rempahapp/features/auth/auth_controller.dart';
 import 'package:rempahapp/shared/shared.dart';
-
 import 'package:flutter/services.dart';
-import 'package:rempahapp/shared/ui.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     Future.delayed(Duration.zero, () async {
       authController.setDefaultFormValue();
-      // await showVersionUpdateAlert(context: context);
+      await showVersionUpdateAlert(context: context);
     });
     super.initState();
   }

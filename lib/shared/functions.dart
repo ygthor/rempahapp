@@ -27,13 +27,10 @@ String apiUrl() {
   return gs.getApiUrl();
 }
 
-
 String appDomain() {
   GlobalState gs = Get.find();
   return gs.getApiDomain();
 }
-
-
 
 devAlert(val) {
   if (val is List || val is Map) {
@@ -58,15 +55,26 @@ showVDialog({title = "Alert", text = "", type = "", onConfirm}) async {
     actionButton = Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        TextButton(onPressed: Get.back, child: Text('Cancel', style: TextStyle(color: Colors.red))),
+        TextButton(
+          onPressed: Get.back,
+          child: Text('Cancel', style: TextStyle(color: Colors.red)),
+        ),
         ElevatedButton(
-            style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Colors.red)),
-            onPressed: onConfirm,
-            child: Text('Yes', style: TextStyle(color: Colors.white)))
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.all(Colors.red),
+          ),
+          onPressed: onConfirm,
+          child: Text('Yes', style: TextStyle(color: Colors.white)),
+        ),
       ],
     );
   } else {
-    actionButton = Center(child: TextButton(onPressed: Get.back, child: Text('Close', style: TextStyle(color: Colors.red))));
+    actionButton = Center(
+      child: TextButton(
+        onPressed: Get.back,
+        child: Text('Close', style: TextStyle(color: Colors.red)),
+      ),
+    );
   }
 
   if (type == "error") {
@@ -86,23 +94,21 @@ showVDialog({title = "Alert", text = "", type = "", onConfirm}) async {
   return await Get.defaultDialog(
     title: "$title",
     content: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          children: [
-            FaIcon(icon, size: 50.0, color: iconColor),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, bottom: 20),
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: Text(
-                  text,
-                  style: TextStyle(height: 1.5),
-                ),
-              ),
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          FaIcon(icon, size: 50.0, color: iconColor),
+          Padding(
+            padding: const EdgeInsets.only(top: 20, bottom: 20),
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Text(text, style: TextStyle(height: 1.5)),
             ),
-            actionButton
-          ],
-        )),
+          ),
+          actionButton,
+        ],
+      ),
+    ),
     backgroundColor: Colors.white,
     titleStyle: const TextStyle(color: Colors.black),
     middleTextStyle: const TextStyle(color: Colors.black),
@@ -122,11 +128,8 @@ showLoading({text = 'Loading ...', dismissable = true}) {
     // barrierDismissible: false,
     content: Column(
       children: [
-        const SpinKitThreeInOut(
-          color: Colors.red,
-          size: 25,
-        ),
-        Text(text)
+        const SpinKitThreeInOut(color: Colors.red, size: 25),
+        Text(text),
       ],
     ),
   );
@@ -143,10 +146,14 @@ Future<bool> appNeedUpdate({context}) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   DateTime? datetime_stop_version_alert_until;
-  String? stop_version_alert_until = prefs.getString('stop_version_alert_until');
+  String? stop_version_alert_until = prefs.getString(
+    'stop_version_alert_until',
+  );
   if (stop_version_alert_until != null) {
     debugPrint("STOP ALERT UNTIL: $datetime_stop_version_alert_until");
-    datetime_stop_version_alert_until = DateTime.parse(stop_version_alert_until);
+    datetime_stop_version_alert_until = DateTime.parse(
+      stop_version_alert_until,
+    );
   }
   DateTime now = DateTime.now();
   final versionChecker = VersionChecker(managed: false);
@@ -159,14 +166,19 @@ showVersionUpdateAlert({context}) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   DateTime? datetime_stop_version_alert_until;
-  String? stop_version_alert_until = prefs.getString('stop_version_alert_until');
+  String? stop_version_alert_until = prefs.getString(
+    'stop_version_alert_until',
+  );
   if (stop_version_alert_until != null) {
     debugPrint("STOP ALERT UNTIL: $datetime_stop_version_alert_until");
-    datetime_stop_version_alert_until = DateTime.parse(stop_version_alert_until);
+    datetime_stop_version_alert_until = DateTime.parse(
+      stop_version_alert_until,
+    );
   }
   DateTime now = DateTime.now();
 
-  if (datetime_stop_version_alert_until != null && datetime_stop_version_alert_until.compareTo(now) > 0) {
+  if (datetime_stop_version_alert_until != null &&
+      datetime_stop_version_alert_until.compareTo(now) > 0) {
     // return;
   }
 
@@ -187,24 +199,37 @@ showVersionUpdateAlert({context}) async {
           child: const Text('Later', style: TextStyle(color: Colors.red)),
           onPressed: () async {
             DateTime stop_until = now.add(const Duration(days: 1));
-            await prefs.setString('stop_version_alert_until', stop_until.toString());
+            await prefs.setString(
+              'stop_version_alert_until',
+              stop_until.toString(),
+            );
             Navigator.of(context).pop();
           },
         ),
         TextButton(
-          child: const Text('App Gallery (Huawei)', style: TextStyle(color: Colors.blue)),
+          child: const Text(
+            'App Gallery (Huawei)',
+            style: TextStyle(color: Colors.blue),
+          ),
           onPressed: () async {
             var url = Constant.HUAWEI_APP_URL; //HUAWEI STORE URL FOR WAW
             var uri = Uri.parse(url);
-            await canLaunchUrl(uri) ? await launchUrl(uri, mode: LaunchMode.externalApplication) : throw 'Could not launch $url';
+            await canLaunchUrl(uri)
+                ? await launchUrl(uri, mode: LaunchMode.externalApplication)
+                : throw 'Could not launch $url';
           },
         ),
         TextButton(
-          child: const Text('Play Store (Google Android)', style: TextStyle(color: Colors.blue)),
+          child: const Text(
+            'Play Store (Google Android)',
+            style: TextStyle(color: Colors.blue),
+          ),
           onPressed: () async {
             var url = appStoreLink;
             var uri = Uri.parse(url);
-            await canLaunchUrl(uri) ? await launchUrl(uri, mode: LaunchMode.externalApplication) : throw 'Could not launch $url';
+            await canLaunchUrl(uri)
+                ? await launchUrl(uri, mode: LaunchMode.externalApplication)
+                : throw 'Could not launch $url';
           },
         ),
       ];
@@ -221,7 +246,9 @@ showVersionUpdateAlert({context}) async {
           onPressed: () async {
             var url = appStoreLink;
             var uri = Uri.parse(url);
-            await canLaunchUrl(uri) ? await launchUrl(uri, mode: LaunchMode.externalApplication) : throw 'Could not launch $url';
+            await canLaunchUrl(uri)
+                ? await launchUrl(uri, mode: LaunchMode.externalApplication)
+                : throw 'Could not launch $url';
           },
         ),
       ];
@@ -238,9 +265,7 @@ showVersionUpdateAlert({context}) async {
               children: <Widget>[
                 Text(
                   'You can now update app from $localVersion to $storeVersion',
-                  style: TextStyle(
-                    color: Colors.black,
-                  ),
+                  style: TextStyle(color: Colors.black),
                 ),
               ],
             ),
@@ -259,31 +284,6 @@ laterVersionUpdateAlert() async {
   await prefs.setString(
     'stop_version_alert_until',
     stop_version_alert_until.toString(),
-  );
-}
-
-DecorationImage empProfileImage() {
-  final GlobalState gs = Get.find();
-  late Uint8List bytesImage;
-  late String networkImageUrl;
-  bool useByteImage = false;
-  String empName = gs.emp['NAME'];
-
-  if (gs.emp['base64_profile_image'] != null && gs.emp['base64_profile_image'] != '') {
-    bytesImage = base64.decode(gs.emp['base64_profile_image']);
-
-    useByteImage = true;
-  } else {
-    empName = empName.toLowerCase();
-    if (empName == 'admin') {
-      empName = 'admin1';
-    }
-    networkImageUrl = "https://ui-avatars.com/api/?name=$empName&color=7F9CF5&background=EBF4FF";
-  }
-
-  return DecorationImage(
-    image: (useByteImage ? MemoryImage(bytesImage) : NetworkImage(networkImageUrl)) as ImageProvider,
-    fit: BoxFit.cover,
   );
 }
 
@@ -308,21 +308,15 @@ Widget shimmerLoading({type = "full_page"}) {
             BannerPlaceholder(),
             TitlePlaceholder(width: double.infinity),
             SizedBox(height: 16.0),
-            ContentPlaceholder(
-              lineType: ContentLineType.threeLines,
-            ),
+            ContentPlaceholder(lineType: ContentLineType.threeLines),
             SizedBox(height: 16.0),
             TitlePlaceholder(width: 200.0),
             SizedBox(height: 16.0),
-            ContentPlaceholder(
-              lineType: ContentLineType.twoLines,
-            ),
+            ContentPlaceholder(lineType: ContentLineType.twoLines),
             SizedBox(height: 16.0),
             TitlePlaceholder(width: 200.0),
             SizedBox(height: 16.0),
-            ContentPlaceholder(
-              lineType: ContentLineType.twoLines,
-            ),
+            ContentPlaceholder(lineType: ContentLineType.twoLines),
           ],
         ),
       ),
@@ -337,9 +331,7 @@ Widget shimmerLoading({type = "full_page"}) {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.max,
-          children: [
-            BannerPlaceholder(),
-          ],
+          children: [BannerPlaceholder()],
         ),
       ),
     );
@@ -352,25 +344,6 @@ bool isBase64(String str) {
     return true;
   } catch (e) {
     return false;
-  }
-}
-
-ImageProvider getImageProvider(String empName) {
-  final GlobalState gs = Get.find();
-  late Uint8List bytesImage;
-  late String networkImageUrl;
-
-  if (gs.emp['base64_profile_image'] != null && gs.emp['base64_profile_image'] != '') {
-    bytesImage = base64.decode(gs.emp['base64_profile_image']);
-
-    return MemoryImage(bytesImage);
-  } else {
-    empName = empName.toLowerCase();
-    if (empName == 'admin') {
-      empName = 'admin1';
-    }
-    networkImageUrl = "https://ui-avatars.com/api/?name=$empName&color=7F9CF5&background=EBF4FF";
-    return NetworkImage(networkImageUrl);
   }
 }
 
@@ -387,7 +360,8 @@ ImageProvider getImageProviderByBase64(String empName, String? image64) {
     if (empName == 'admin') {
       empName = 'admin1';
     }
-    networkImageUrl = "https://ui-avatars.com/api/?name=$empName&color=7F9CF5&background=EBF4FF";
+    networkImageUrl =
+        "https://ui-avatars.com/api/?name=$empName&color=7F9CF5&background=EBF4FF";
     return NetworkImage(networkImageUrl);
   } else {
     return const AssetImage('assets/images/no_product.jpg');
@@ -416,9 +390,7 @@ String appendQueryParameter(String url, String paramName, String paramValue) {
 }
 
 aLog(v) {
-  var logger = Logger(
-    printer: PrettyPrinter(),
-  );
+  var logger = Logger(printer: PrettyPrinter());
   logger.w(v);
 }
 

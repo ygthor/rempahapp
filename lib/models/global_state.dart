@@ -15,7 +15,7 @@ class GlobalState {
 
   bool enableLocationTracking = false;
 
-  var emp;
+  var user;
   var recentClockInData;
   var leavePeriod;
 
@@ -81,8 +81,8 @@ class GlobalState {
     deviceToken = data;
   }
 
-  setEmp(data) {
-    emp = data;
+  setUser(data) {
+    user = data;
   }
 
   setRecentClockInData(data) {

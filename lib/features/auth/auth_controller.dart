@@ -17,35 +17,29 @@ class AuthController {
 
   setDefaultFormValue() {
     formKeyLogin.currentState?.patchValue({
-      'company_code': '',
-      'username': '',
-      'password': '',
+      'username': 'orangutan',
+      'password': '123123123',
     });
   }
 
   checkLogin() async {
-    ApiV1 apiV1 = ApiV1();
     final GlobalState gs = Get.find();
     final SharedPreferences sp = await SharedPreferences.getInstance();
     final token = sp.getString('token');
-
+    ApiV1 apiV1 = ApiV1(bearerToken: token);
 
     if (token != null) {
       gs.setToken(token);
 
       //VALIDATE TOKEN
-      var user = await apiV1.getUserEmployeeDetail(token);
+      var user = await apiV1.getUser();
       if (user['error'] == 0) {
         //Get and set employee info to phone
 
-        gs.setEmp(user['data']);
+        gs.setUser(user['data']);
         //SET USER TO GLOBAL
 
-        //get SYSTEM SETTING and put in local storage
-        var systemSetting = await apiV1.getSystemSetting(token: token);
-        gs.setSystemSetting(systemSetting['data']);
-
-        Get.off(const DashboardPage());
+        Get.off(DashboardPage());
       } else {
         //USER TOKEN IS Invalid, log it out, and remove token
         sp.remove('token');
@@ -79,7 +73,7 @@ class AuthController {
     }
 
     if (token != null) {
-      var user = await apiV1.checkToken(token);
+      var user = await apiV1.getUser();
       aLog(user);
       if (user['error'] == 0) {
         // gs.setEmp(user['data']);
@@ -99,7 +93,10 @@ class AuthController {
       sp.remove('token');
       sp.remove('company_code');
       sp.remove('api_domain');
-      await showVDialog(title: 'Session Expired', text: "Your session token is invalid, please login again.");
+      await showVDialog(
+        title: 'Session Expired',
+        text: "Your session token is invalid, please login again.",
+      );
       Get.off(const LoginPage());
       return false;
     } else {
@@ -123,30 +120,23 @@ class AuthController {
       return;
     }
 
-    var result = await apiV1.login(
-      formData['username'],
-      formData['password'],
-    );
+    var result = await apiV1.login(formData['username'], formData['password']);
+    aLog(result);
     if (result['error'] == 0) {
       //SET login token into phone storage
       var token = result['data']['token'];
       await prefs.setString('token', token);
-      
+
       //Get and set employee info to phone
-      result = await apiV1.getUserEmployeeDetail(token);
+      result = await apiV1.getUser();
       gs.setToken(token);
-      gs.setEmp(result['data']);
+      gs.setUser(result['data']);
 
-      //get SYSTEM SETTING and put in local storage
-      var systemSetting = await apiV1.getSystemSetting(token: token);
-      gs.setSystemSetting(systemSetting['data']);
-
-      Get.offAll(const DashboardPage());
+      Get.offAll(DashboardPage());
       //redirect to home page
     } else {
       hideLoading();
       //said login fail
-      
     }
   }
 
@@ -184,10 +174,7 @@ class AuthController {
     }
 
     showLoading();
-    var result = await apiV1.register(
-      formData['email'],
-      formData['username'],
-    );
+    var result = await apiV1.register(formData['email'], formData['username']);
     hideLoading();
     if (result['error'] == 0) {
       var message = result['message'] ?? 'Success';
