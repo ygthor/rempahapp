@@ -24,6 +24,17 @@ class _DashboardPageState extends State<DashboardPage> {
     GlobalState gs = Get.find();
     var user = gs.user;
 
+    String _totalRevenue = "RM 0.00";
+    String _nettSales = "RM 0.00";
+    String _totalCollections = "RM 0.00";
+    String _outstandingDebt = "RM 0.00";
+    String _inventoryValue = "RM 0.00";
+    String _invoicesIssued = "0";
+    String _receiptsIssued = "0";
+    String _newCustomers = "0";
+    String _pendingOrders = "0";
+    String _lowStockItems = "0";
+
     return Scaffold(
       drawer: AppDrawer(),
       appBar: AppBar(
@@ -97,192 +108,133 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               SizedBox(height: 10),
 
-              // _buildTile(
-              //   Padding(
-              //     padding: const EdgeInsets.all(24.0),
-              //     child: Row(
-              //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //       children: [
-              //         Column(
-              //           crossAxisAlignment: CrossAxisAlignment.start,
-              //           children: [
-              //             Text(
-              //               'Total Views',
-              //               style: TextStyle(color: Colors.blueAccent),
-              //             ),
-              //             Text(
-              //               '265K',
-              //               style: TextStyle(
-              //                 color: Colors.black,
-              //                 fontWeight: FontWeight.w700,
-              //                 fontSize: 34.0,
-              //               ),
-              //             ),
-              //           ],
-              //         ),
-              //         Material(
-              //           color: Colors.blue,
-              //           borderRadius: BorderRadius.circular(24.0),
-              //           child: Padding(
-              //             padding: const EdgeInsets.all(16.0),
-              //             child: Icon(
-              //               Icons.timeline,
-              //               color: Colors.white,
-              //               size: 30.0,
-              //             ),
-              //           ),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ),
-              SizedBox(height: 12.0),
               Wrap(
-                spacing: 12.0,
-                runSpacing: 12.0,
+                spacing: 16.0, // Increased spacing
+                runSpacing: 16.0, // Increased spacing
                 children: [
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width / 2 - 22,
-                    child: _buildTile(
-                      Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Material(
-                              color: Colors.teal,
-                              shape: CircleBorder(),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Icon(
-                                  FontAwesomeIcons.userGroup,
-                                  color: Colors.white,
-                                  size: 30.0,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 16.0),
-                            Text(
-                              'Customer',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 24.0,
-                              ),
-                            ),
-                            Text(
-                              '5000',
-                              style: TextStyle(color: Colors.black45),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                  // Existing Tiles
+                  _buildDashboardTile(
+                    title: 'Customers',
+                    value: '5000', // Replace with actual data
+                    icon: FontAwesomeIcons.userGroup,
+                    iconColor: Colors.white,
+                    iconBgColor: Colors.teal,
+                    onTap: () {
+                      /* Navigate to customer list page */
+                    },
                   ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width / 2 - 22,
-                    child: _buildTile(
-                      Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Material(
-                              color: Colors.amber,
-                              shape: CircleBorder(),
-                              child: Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: Icon(
-                                  FontAwesomeIcons.fileInvoiceDollar,
-                                  color: Colors.white,
-                                  size: 30.0,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 16.0),
-                            Text(
-                              'Orders',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 24.0,
-                              ),
-                            ),
-                            Text('12', style: TextStyle(color: Colors.black45)),
-                          ],
-                        ),
-                      ),
-                    ),
+                  _buildDashboardTile(
+                    title: 'Orders',
+                    value: '1205', // Replace with actual data
+                    icon: FontAwesomeIcons.fileInvoiceDollar,
+                    iconColor: Colors.white,
+                    iconBgColor: Colors.amber,
+                    onTap: () {
+                      /* Navigate to order list page */
+                    },
                   ),
 
-                  // SizedBox(
-                  //   width: MediaQuery.of(context).size.width,
-                  //   child: _buildTile(
-                  //     Padding(
-                  //       padding: const EdgeInsets.all(24.0),
-                  //       child: Row(
-                  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  //         children: [
-                  //           Column(
-                  //             crossAxisAlignment: CrossAxisAlignment.start,
-                  //             children: [
-                  //               Text(
-                  //                 'Revenue',
-                  //                 style: TextStyle(color: Colors.green),
-                  //               ),
-                  //               Text(
-                  //                 '\$16K',
-                  //                 style: TextStyle(
-                  //                   fontWeight: FontWeight.w700,
-                  //                   fontSize: 34.0,
-                  //                 ),
-                  //               ),
-                  //             ],
-                  //           ),
-                  //         ],
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-                  // SizedBox(
-                  //   width: MediaQuery.of(context).size.width,
-                  //   child: _buildTile(
-                  //     Padding(
-                  //       padding: const EdgeInsets.all(24.0),
-                  //       child: Row(
-                  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  //         children: [
-                  //           Column(
-                  //             crossAxisAlignment: CrossAxisAlignment.start,
-                  //             children: [
-                  //               Text(
-                  //                 'Inventory',
-                  //                 style: TextStyle(color: Colors.redAccent),
-                  //               ),
-                  //               Text(
-                  //                 '173',
-                  //                 style: TextStyle(
-                  //                   fontWeight: FontWeight.w700,
-                  //                   fontSize: 34.0,
-                  //                 ),
-                  //               ),
-                  //             ],
-                  //           ),
-                  //           Material(
-                  //             color: Colors.red,
-                  //             borderRadius: BorderRadius.circular(24.0),
-                  //             child: Padding(
-                  //               padding: EdgeInsets.all(16.0),
-                  //               child: Icon(
-                  //                 Icons.store,
-                  //                 color: Colors.white,
-                  //                 size: 30.0,
-                  //               ),
-                  //             ),
-                  //           ),
-                  //         ],
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
+                  // New Tiles
+                  _buildDashboardTile(
+                    title: 'Revenue',
+                    value: _totalRevenue,
+                    icon: FontAwesomeIcons.dollarSign,
+                    iconColor: Colors.white,
+                    iconBgColor: Colors.green,
+                    onTap: () {
+                      /* Navigate to revenue report */
+                    },
+                  ),
+                  _buildDashboardTile(
+                    title: 'Nett Sales',
+                    value: _nettSales,
+                    icon: FontAwesomeIcons.chartLine,
+                    iconColor: Colors.white,
+                    iconBgColor: Colors.lightGreen,
+                    onTap: () {
+                      /* Navigate to sales report */
+                    },
+                  ),
+                  _buildDashboardTile(
+                    title: 'Collections',
+                    value: _totalCollections,
+                    icon: FontAwesomeIcons.handHoldingDollar,
+                    iconColor: Colors.white,
+                    iconBgColor: Colors.blue,
+                    onTap: () {
+                      /* Navigate to collections/receipt report */
+                    },
+                  ),
+                  _buildDashboardTile(
+                    title: 'Outstanding',
+                    value: _outstandingDebt,
+                    icon: FontAwesomeIcons.hourglassHalf,
+                    iconColor: Colors.white,
+                    iconBgColor: Colors.orange,
+                    onTap: () {
+                      /* Navigate to debt list page */
+                    },
+                  ),
+                  _buildDashboardTile(
+                    title: 'Inventory Value',
+                    value: _inventoryValue,
+                    icon: FontAwesomeIcons.boxesStacked,
+                    iconColor: Colors.white,
+                    iconBgColor: Colors.purple,
+                    onTap: () {
+                      /* Navigate to inventory value report */
+                    },
+                  ),
+                  _buildDashboardTile(
+                    title: 'Invoices Issued',
+                    value: _invoicesIssued,
+                    icon: FontAwesomeIcons.fileLines,
+                    iconColor: Colors.white,
+                    iconBgColor: Colors.cyan,
+                    onTap: () {
+                      /* Navigate to invoice list */
+                    },
+                  ),
+                  _buildDashboardTile(
+                    title: 'Receipts Issued',
+                    value: _receiptsIssued,
+                    icon: FontAwesomeIcons.receipt,
+                    iconColor: Colors.white,
+                    iconBgColor: Colors.pinkAccent,
+                    onTap: () {
+                      /* Navigate to receipt list */
+                    },
+                  ),
+                  _buildDashboardTile(
+                    title: 'New Customers',
+                    value: _newCustomers,
+                    icon: FontAwesomeIcons.userPlus,
+                    iconColor: Colors.white,
+                    iconBgColor: Colors.indigo,
+                    onTap: () {
+                      /* Navigate to new customer report */
+                    },
+                  ),
+                  _buildDashboardTile(
+                    title: 'Pending Orders',
+                    value: _pendingOrders,
+                    icon: FontAwesomeIcons.clockRotateLeft,
+                    iconColor: Colors.white,
+                    iconBgColor: Colors.brown,
+                    onTap: () {
+                      /* Navigate to pending orders list */
+                    },
+                  ),
+                  _buildDashboardTile(
+                    title: 'Low Stock Items',
+                    value: _lowStockItems,
+                    icon: FontAwesomeIcons.triangleExclamation,
+                    iconColor: Colors.white,
+                    iconBgColor: Colors.redAccent,
+                    onTap: () {
+                      /* Navigate to low stock report */
+                    },
+                  ),
                 ],
               ),
             ],
@@ -306,6 +258,74 @@ class _DashboardPageState extends State<DashboardPage> {
                   print('Not set yet');
                 },
         child: child,
+      ),
+    );
+  }
+
+  // Refactored _buildTile to a more generic _buildDashboardTile
+  Widget _buildDashboardTile({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+    VoidCallback? onTap,
+  }) {
+    return SizedBox(
+      width:
+          MediaQuery.of(context).size.width / 2 -
+          (16.0 + 8.0), // (padding + spacing/2)
+      child: Material(
+        elevation: 8.0, // Reduced elevation for a flatter look
+        borderRadius: BorderRadius.circular(12.0),
+        shadowColor: Colors.grey.withOpacity(0.3), // Softer shadow
+        child: InkWell(
+          onTap: onTap ?? () => print('$title tile tapped (Not set yet)'),
+          borderRadius: BorderRadius.circular(12.0),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0), // Reduced padding
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment:
+                  MainAxisAlignment.spaceBetween, // Ensure content is spaced
+              children: [
+                Material(
+                  color: iconBgColor,
+                  shape: CircleBorder(),
+                  elevation: 2.0, // Slight elevation for the icon holder
+                  child: Padding(
+                    padding: const EdgeInsets.all(
+                      12.0,
+                    ), // Reduced padding for icon
+                    child: Icon(
+                      icon,
+                      color: iconColor,
+                      size: 24.0, // Reduced icon size
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.0),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600, // Slightly less bold
+                    fontSize: 16.0, // Adjusted font size
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 4.0),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20.0, // Adjusted font size for value
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
