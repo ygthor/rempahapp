@@ -88,10 +88,8 @@ class AuthController {
     }
 
     if (forceLogout) {
-      gs.stopCheckLoginTimer();
       Get.put(GlobalState()); // reset global status
       sp.remove('token');
-      sp.remove('company_code');
       sp.remove('api_domain');
       await showVDialog(
         title: 'Session Expired',
@@ -143,8 +141,6 @@ class AuthController {
   logout() async {
     final GlobalState gs = Get.find();
     final SharedPreferences sp = await SharedPreferences.getInstance();
-
-    gs.stopCheckLoginTimer();
     Get.put(GlobalState()); // reset global status
     sp.remove('token');
     sp.remove('company_code');

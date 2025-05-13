@@ -11,45 +11,20 @@ class GlobalState {
   String? deviceToken;
   String? apiUrl;
   String? apiDomain;
-  String? guideDomain;
-
-  bool enableLocationTracking = false;
 
   var user;
-  var recentClockInData;
-  var leavePeriod;
-
-  late Map systemSetting;
-
-  Timer? checkTokenTimer;
   bool networkStatus = true;
   String? appVersion = "";
   var dashboardData;
 
-  setEnableLocationTracking(v) async {
-    final SharedPreferences sp = await SharedPreferences.getInstance();
-    sp.setBool('enableLocationTracking', v);
-    enableLocationTracking = v;
+  String? selectedBranch;
 
-    // final service = FlutterBackgroundService();
-    // var isRunning = await service.isRunning();
-    // aLog("isRunning: " + (isRunning ? "TRUE" : "FALSE"));
-
-    // if (v) {
-    //   service.startService();
-    // } else {
-    //   service.invoke("stopService");
-    // }
+  GlobalState() {
+    init();
   }
-
-  retrieveEnableLocationTracking() async {
-    final SharedPreferences sp = await SharedPreferences.getInstance();
-    enableLocationTracking = sp.getBool('enableLocationTracking') ?? false;
-    setEnableLocationTracking(enableLocationTracking);
-  }
-
-  getGuideDomain() {
-    return guideDomain;
+  init() async {
+    appVersion = await getVersion();
+    selectedBranch = Constant.branchList[0];
   }
 
   getApiUrl() {
@@ -68,13 +43,6 @@ class GlobalState {
 
   setToken(data) {
     token = data;
-    // FirebaseController firebaseController = FirebaseController();
-    // firebaseController.saveFirebaseDeviceToken();
-    // retrieveEnableLocationTracking();
-  }
-
-  setTokenSliently(data) {
-    token = data;
   }
 
   setDeviceToken(data) {
@@ -85,32 +53,15 @@ class GlobalState {
     user = data;
   }
 
-  setRecentClockInData(data) {
-    recentClockInData = data;
-  }
-
-  setLeavePeriod(data) {
-    leavePeriod = data;
-  }
-
-  setSystemSetting(data) {
-    systemSetting = data;
-  }
-
-  stopCheckLoginTimer() {
-    // Start the periodic timer
-    checkTokenTimer?.cancel();
-  }
-
   setNetworkStatus(bool v) {
     networkStatus = v;
   }
 
-  init() async {
-    appVersion = await getVersion();
-  }
-
   setDashboardData(v) {
     dashboardData = v;
+  }
+
+  setSelectedBranch(v) {
+    selectedBranch = v;
   }
 }

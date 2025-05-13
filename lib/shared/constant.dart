@@ -7,4 +7,6 @@ class Constant {
   static const String ANDROID_ID = 'com.example.bht';
   static const String IOS_ID = 'com.example.bht';
   static const String HUAWEI_APP_URL = "com.example.bht";
+
+  static List<String> branchList = ["Penang", "Ipoh"];
 }
