@@ -119,15 +119,18 @@ class AuthController {
     }
 
     var result = await apiV1.login(formData['username'], formData['password']);
-    aLog(result);
+
     if (result['error'] == 0) {
       //SET login token into phone storage
       var token = result['data']['token'];
       await prefs.setString('token', token);
+      gs.setToken(token);
 
       //Get and set employee info to phone
+      ApiV1 apiV1 = ApiV1(bearerToken: gs.token);
       result = await apiV1.getUser();
-      gs.setToken(token);
+      aLog(result);
+
       gs.setUser(result['data']);
 
       Get.offAll(DashboardPage());

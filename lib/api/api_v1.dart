@@ -11,69 +11,114 @@ class ApiV1 {
 
   ApiV1({this.bearerToken});
 
-  parseUri(domain, String url) {
-    Uri uri = Uri.http(domain, url);
-    return uri;
+  Uri _parseUri(String path) {
+    String domain = appDomain();
+    // return Uri.https(domain, path); // AI please dont change this, for dev purpose
+    return Uri.http(domain, path);
   }
 
-  httpPost(actionUrl, {body}) async {
-    return http.post(
+  // --- HTTP Helper Methods ---
+  Future<http.Response> _httpGet(Uri actionUrl) async {
+    return http.get(
       actionUrl,
       headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer $bearerToken',
       },
-
-      body: body,
     );
   }
 
-  login(username, password) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/auth/token');
+  Future<http.Response> _httpPost(
+    Uri actionUrl, {
+    Map<String, dynamic>? body,
+  }) async {
+    return http.post(
+      actionUrl,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json; charset=UTF-8', // Added Content-Type
+        'Authorization': 'Bearer $bearerToken',
+      },
+      body: body != null ? json.encode(body) : null, // Encode body to JSON
+    );
+  }
+
+  Future<http.Response> _httpPut(
+    Uri actionUrl, {
+    Map<String, dynamic>? body,
+  }) async {
+    return http.put(
+      actionUrl,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json; charset=UTF-8', // Added Content-Type
+        'Authorization': 'Bearer $bearerToken',
+      },
+      body: body != null ? json.encode(body) : null, // Encode body to JSON
+    );
+  }
+
+  Future<http.Response> _httpDelete(Uri actionUrl) async {
+    return http.delete(
+      actionUrl,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $bearerToken',
+      },
+    );
+  }
+
+  // --- Authentication Methods (Existing) ---
+  login(String username, String password) async {
+    Uri actionUrl = _parseUri('/api/auth/token'); // Path for login
 
     final response = await http.post(
+      // Using http.post directly as it doesn't need bearer token initially
       actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"identifier": "$username", "password": "$password"},
+      headers: {
+        'Accept': 'application/json',
+      }, // No bearer token for login itself
+      body: {"identifier": username, "password": password},
     );
     var result = json.decode(response.body);
     return result;
   }
 
-  register(email, username) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/register');
+  register(String email, String username) async {
+    Uri actionUrl = _parseUri('/api/v1/register'); // Adjust path if needed
 
     final response = await http.post(
       actionUrl,
       headers: {'Accept': 'application/json'},
-      body: {"email": "$email", "username": "$username"},
+      body: {"email": email, "username": username},
     );
     var result = json.decode(response.body);
     return result;
   }
 
-  logout({token, device_token}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/logout');
+  logout({String? token, String? device_token}) async {
+    Uri actionUrl = _parseUri('/api/v1/logout'); // Adjust path if needed
 
-    final response = await http.post(
+    final response = await _httpPost(
+      // Assuming logout requires bearer token
       actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token", "device_token": "$device_token"},
+      body: {"token": token, "device_token": device_token},
     );
     var result = json.decode(response.body);
     return result;
   }
 
   getUser() async {
-    Uri actionUrl = parseUri(appDomain(), '/api/me');
+    Uri actionUrl = _parseUri('/api/me'); // Path for getting user info
+    aLog(actionUrl);
 
-    final response = await httpPost(actionUrl);
-    aLog(response.body);
+    final response = await _httpGet(actionUrl); // Changed to _httpGet
+    aLog("GetUser Response: ${response.statusCode} - ${response.body}");
 
     if (response.statusCode != 200) {
       showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
+        title: 'Server Error ${response.statusCode}',
+        text: 'Could not fetch user data. ${response.reasonPhrase}',
       );
       return null;
     }
@@ -82,462 +127,176 @@ class ApiV1 {
     return result;
   }
 
-  getDashboardData() async {
-    GlobalState gs = Get.find();
-    String? token = gs.token;
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/get_dashboard_data');
+  // --- Customer API Methods ---
 
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token"},
-    );
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
+  /// Fetches all customers.
+  Future<dynamic> getAllCustomers() async {
+    Uri actionUrl = _parseUri('/api/customers');
+    try {
+      final response = await _httpGet(actionUrl);
+      aLog(
+        "GetAllCustomers Response: ${response.statusCode} - ${response.body}",
       );
-      return null;
-    } else {
-      var result = json.decode(response.body);
-      return result;
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        showVDialog(
+          title: 'API Error (${response.statusCode})',
+          text: 'Failed to fetch customers: ${response.reasonPhrase}',
+        );
+        return {
+          'error': true,
+          'message': response.body,
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      aLog("GetAllCustomers Exception: $e");
+      showVDialog(
+        title: 'Network Error',
+        text: 'Could not connect to server: $e',
+      );
+      return {'error': true, 'message': e.toString()};
     }
   }
 
-  storeDeviceToken({token, deviceToken, deviceInfo}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/store_device_token');
-
-    Map<String, String> header = {'Accept': 'application/json'};
-
-    final response = await http.post(
-      actionUrl,
-      headers: header,
-      body: {
-        "token": "$token",
-        "device_token": "$deviceToken",
-        "device_info": "$deviceInfo",
-      },
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
+  /// Creates a new customer.
+  /// The `customerData` map should contain all necessary fields for creating a customer,
+  /// matching either the "Original Form" or "Detailed Form" structure from your Postman collection.
+  Future<Map<String, dynamic>?> createCustomer(
+    Map<String, dynamic> customerData,
+  ) async {
+    Uri actionUrl = _parseUri('/api/customers');
+    try {
+      final response = await _httpPost(actionUrl, body: customerData);
+      aLog(
+        "CreateCustomer Response: ${response.statusCode} - ${response.body}",
       );
-      return null;
+      // Successful creation is often 201
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        showVDialog(
+          title: 'API Error (${response.statusCode})',
+          text: 'Failed to create customer: ${response.reasonPhrase}',
+        );
+        return {
+          'error': true,
+          'message': response.body,
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      aLog("CreateCustomer Exception: $e");
+      showVDialog(
+        title: 'Network Error',
+        text: 'Could not connect to server: $e',
+      );
+      return {'error': true, 'message': e.toString()};
     }
-
-    var result = json.decode(response.body);
-    return result;
   }
 
-  getUserPicture(token) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/get_user_profile_image');
-
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token"},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
+  /// Fetches a specific customer by their ID.
+  Future<Map<String, dynamic>?> getCustomerById(String customerId) async {
+    Uri actionUrl = _parseUri('/api/customers/$customerId');
+    try {
+      final response = await _httpGet(actionUrl);
+      aLog(
+        "GetCustomerById Response: ${response.statusCode} - ${response.body}",
       );
-      return null;
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        showVDialog(
+          title: 'API Error (${response.statusCode})',
+          text:
+              'Failed to fetch customer $customerId: ${response.reasonPhrase}',
+        );
+        return {
+          'error': true,
+          'message': response.body,
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      aLog("GetCustomerById Exception: $e");
+      showVDialog(
+        title: 'Network Error',
+        text: 'Could not connect to server: $e',
+      );
+      return {'error': true, 'message': e.toString()};
     }
-
-    var result = json.decode(response.body);
-    return result;
   }
 
-  clockInOut({token, gps, address, time_in_type, type, date}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/clock_in_out');
-    aLog({
-      "token": "$token",
-      "gps_lat_lng": "$gps",
-      "address": "$address",
-      "type": "$type",
-      "time_in_type": "$time_in_type",
-      "date": "$date",
-    });
-
-    if (time_in_type == null || time_in_type == 0) {
-      showVDialog(title: 'Error', text: 'time_in_type', type: 'error');
-      return;
-    }
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {
-        "token": "$token",
-        "gps_lat_lng": "$gps",
-        "address": "$address",
-        "type": "$type",
-        "time_in_type": "$time_in_type",
-        "date": "$date",
-      },
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
+  /// Updates an existing customer.
+  /// The `customerData` map should contain the fields to be updated.
+  Future<Map<String, dynamic>?> updateCustomer(
+    String customerId,
+    Map<String, dynamic> customerData,
+  ) async {
+    Uri actionUrl = _parseUri('/api/customers/$customerId');
+    try {
+      final response = await _httpPut(actionUrl, body: customerData);
+      aLog(
+        "UpdateCustomer Response: ${response.statusCode} - ${response.body}",
       );
-      return null;
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        showVDialog(
+          title: 'API Error (${response.statusCode})',
+          text:
+              'Failed to update customer $customerId: ${response.reasonPhrase}',
+        );
+        return {
+          'error': true,
+          'message': response.body,
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      aLog("UpdateCustomer Exception: $e");
+      showVDialog(
+        title: 'Network Error',
+        text: 'Could not connect to server: $e',
+      );
+      return {'error': true, 'message': e.toString()};
     }
-
-    var result = json.decode(response.body);
-    aLog("clockInOut");
-    aLog(result);
-    return result;
   }
 
-  displayClockInOut({token, type}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/display_clock_in_out');
-
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token", "type": "$type"},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
+  /// Deletes a customer by their ID.
+  Future<Map<String, dynamic>?> deleteCustomer(String customerId) async {
+    Uri actionUrl = _parseUri('/api/customers/$customerId');
+    try {
+      final response = await _httpDelete(actionUrl);
+      aLog(
+        "DeleteCustomer Response: ${response.statusCode} - ${response.body}",
       );
-      return null;
-    }
-
-    var result = json.decode(response.body);
-
-    return result;
-  }
-
-  getRecentClockIn({required token}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/get_recent_clockin_data');
-
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token"},
-    );
-
-    if (response.statusCode != 200) {
+      // Successful deletion can be 200 with a message or 204 No Content
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        if (response.body.isNotEmpty) {
+          return json.decode(response.body);
+        }
+        return {'success': true, 'message': 'Customer deleted successfully.'};
+      } else {
+        showVDialog(
+          title: 'API Error (${response.statusCode})',
+          text:
+              'Failed to delete customer $customerId: ${response.reasonPhrase}',
+        );
+        return {
+          'error': true,
+          'message': response.body,
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      aLog("DeleteCustomer Exception: $e");
       showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
+        title: 'Network Error',
+        text: 'Could not connect to server: $e',
       );
-      return null;
+      return {'error': true, 'message': e.toString()};
     }
-
-    var result = json.decode(response.body);
-
-    return result;
   }
-
-  getYesterdayPendingTimesheet({required token}) async {
-    Uri actionUrl = parseUri(
-      appDomain(),
-      '/api/v1/get_yesterday_pending_timesheet',
-    );
-
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token"},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return null;
-    }
-
-    var result = json.decode(response.body);
-
-    return result;
-  }
-
-  getLeavePeriod({required token, year = ''}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/leave/get_leave_info');
-    //devAlert(token);
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token", "year": "$year"},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return null;
-    }
-
-    var result = json.decode(response.body);
-
-    return result;
-  }
-
-  Future<bool> validateOldPassword({
-    required token,
-    String oldPass = '',
-  }) async {
-    bool isPasswordValid = false;
-    Uri actionUrl = parseUri(
-      appDomain(),
-      '/api/v1/preference/validate_old_password',
-    );
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token", "oldPass": oldPass},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return false;
-    }
-
-    var result = json.decode(response.body);
-    if (result['data'] == 'true') {
-      isPasswordValid = true;
-    }
-
-    if (!['true', 'false'].contains(result['data'])) {
-      throw Exception('result should only output true or false');
-    }
-    return isPasswordValid;
-  }
-
-  Future<bool> updatePassword({required token, required String newPass}) async {
-    bool isUpdateValid = false;
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/preference/update_password');
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token", "newPass": newPass},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return false;
-    }
-
-    var result = json.decode(response.body);
-    if (result['data'] == 'true') {
-      isUpdateValid = true;
-    }
-
-    if (!['true', 'false'].contains(result['data'])) {
-      throw Exception('result should only output true or false');
-    }
-    return isUpdateValid;
-  }
-
-  getNotifications({token, page, perPage}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/get_notifications');
-    //devAlert(token);
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token", "page": "$page", "per_page": "$perPage"},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return null;
-    }
-
-    var result = json.decode(response.body);
-
-    return result;
-  }
-
-  getSystemSetting({required token}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/get_system_setting');
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token"},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return null;
-    }
-
-    var result = json.decode(response.body);
-
-    return result;
-  }
-
-  getTimesheetTrans({token, page, perPage}) async {
-    Uri actionUrl = parseUri(
-      appDomain(),
-      '/api/v1/timesheet/get_timesheet_trans',
-    );
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token", "page": "$page", "per_page": "$perPage"},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return null;
-    }
-
-    var result = json.decode(response.body);
-
-    return result;
-  }
-
-  getTimesheets({token, transId}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/timesheet/get_timesheets');
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token", "trans_id": "$transId"},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return null;
-    }
-
-    var result = json.decode(response.body);
-
-    return result;
-  }
-
-  getPayrollPeriod({token}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/get_payslip_period');
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token"},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return null;
-    }
-
-    var result = json.decode(response.body);
-    return result;
-  }
-
-  getPayslipDetail({token, payrollKey}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/get_payslip_detail');
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token", "payroll_key": "$payrollKey"},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return null;
-    }
-
-    var result = json.decode(response.body);
-    return result;
-  }
-
-  getPayslipTemporaryUrl({token, payrollKey}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/get_payslip_temporary_url');
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token", "payroll_key": "$payrollKey"},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return null;
-    }
-
-    var result = json.decode(response.body);
-    return result;
-  }
-
-  triggerPayslipEmail({token, payrollKey}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/trigger_payslip_email');
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {"token": "$token", "payroll_key": "$payrollKey"},
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return null;
-    }
-
-    var result = json.decode(response.body);
-    return result;
-  }
-
-  logLocation({token, address, coordinate, device_info}) async {
-    Uri actionUrl = parseUri(appDomain(), '/api/v1/log_location');
-    final response = await http.post(
-      actionUrl,
-      headers: {'Accept': 'application/json'},
-      body: {
-        "token": "$token",
-        "address": "$address",
-        "coordinate": "$coordinate",
-        "device_info": device_info,
-      },
-    );
-
-    if (response.statusCode != 200) {
-      showVDialog(
-        title: 'Internal Server Error',
-        text: 'Internal Server Error',
-      );
-      return null;
-    }
-
-    var result = json.decode(response.body);
-
-    return result;
-  }
-} //end of Auth Service Class
+} //end of ApiV1 Class
