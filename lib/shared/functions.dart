@@ -446,3 +446,10 @@ String convertToAmPm(String? dateTimeStr) {
     return '-';
   }
 }
+
+double? parseDoubleFromStringOrNum(dynamic value) {
+  if (value == null) return null;
+  if (value is String) return double.tryParse(value);
+  if (value is num) return value.toDouble();
+  return null;
+}

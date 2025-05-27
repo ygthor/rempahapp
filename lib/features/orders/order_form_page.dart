@@ -1,72 +1,67 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:rempahapp/models/order.dart';
-import 'package:rempahapp/models/order_item.dart';
-import 'package:rempahapp/models/product.dart';
+import 'package:get/get.dart';
+import 'package:rempahapp/models/order.dart'; // Ensure this path is correct
+import 'package:rempahapp/models/order_item.dart'; // Ensure this path is correct
+// Assuming the simple ApiProduct model is still relevant for product selection
+// If not, and you have a richer Product model for local use, adjust accordingly.
+// For this example, we'll keep ApiProduct for the product dropdown.
+// import 'package:rempahapp/models/product.dart';
+import 'package:rempahapp/models/global_state.dart'; // For token
+import 'package:rempahapp/api/api_v1.dart'; // Your API service
+import 'package:rempahapp/shared/functions.dart'; // For aLog, showVDialog
 
-final List<Product> _allProducts = [
-  Product(
-    id: 'p1',
-    name: 'Product A1',
-    sku: 'SKU001',
-    groupId: 'g1',
-    subGroupId: 'sg1_1',
-    price: 10.00,
-  ),
-  Product(
-    id: 'p2',
-    name: 'Product A2',
-    sku: 'SKU002',
-    groupId: 'g1',
-    subGroupId: 'sg1_1',
-    price: 12.50,
-  ),
-  Product(
-    id: 'p3',
-    name: 'Product B1',
-    sku: 'SKU003',
-    groupId: 'g1',
-    subGroupId: 'sg1_2',
-    price: 15.00,
-  ),
-  Product(
-    id: 'p4',
-    name: 'Product C1',
-    sku: 'SKU004',
-    groupId: 'g2',
-    subGroupId: 'sg2_1',
-    price: 20.00,
-  ),
-  Product(
-    id: 'p5',
-    name: 'Product C2',
-    sku: 'SKU005',
-    groupId: 'g2',
-    subGroupId: 'sg2_1',
-    price: 22.00,
-  ),
-];
+// Simplified Product model based on API response for product listing
+class ApiProduct {
+  final int id; // From API "Id"
+  final String productName; // From API "ProductName"
 
-final Map<String, String> _groups = {'g1': 'Group A', 'g2': 'Group B'};
-final Map<String, String> _subGroups = {
-  'sg1_1': 'Sub Group A1',
-  'sg1_2': 'Sub Group A2',
-  'sg2_1': 'Sub Group C1',
-};
-// Dependencies: Group -> SubGroups
-final Map<String, List<String>> _groupSubGroupMap = {
-  'g1': ['sg1_1', 'sg1_2'],
-  'g2': ['sg2_1'],
-};
-// Dependencies: SubGroup -> Products
-final Map<String, List<String>> _subGroupProductMap = {
-  'sg1_1': ['p1', 'p2'],
-  'sg1_2': ['p3'],
-  'sg2_1': ['p4', 'p5'],
-};
+  ApiProduct({required this.id, required this.productName});
+
+  factory ApiProduct.fromJson(Map<String, dynamic> json) {
+    return ApiProduct(
+      id: json['Id'] as int,
+      productName: json['ProductName'] as String? ?? 'Unknown Product',
+    );
+  }
+}
+// --- End of ApiProduct Model ---
+
+// Customer model (as defined in your CustomerListPageFromApi or a shared models file)
+// This should have an integer `id` field.
+class Customer {
+  final int id; // From API "id": 3 (integer)
+  final String? customerCode;
+  final String? name;
+  final String? companyName;
+  // Add other fields as necessary, matching your actual Customer model
+  // For this example, id and companyName are most relevant for the form.
+
+  Customer({
+    required this.id,
+    this.customerCode,
+    this.name,
+    this.companyName,
+    // Initialize other fields
+  });
+
+  // Add fromJson if not already present in your shared Customer model
+  factory Customer.fromJson(Map<String, dynamic> json) {
+    return Customer(
+      id: json['id'] as int, // API sends 'id' as int
+      customerCode: json['customer_code'] as String?,
+      name: json['name'] as String?,
+      companyName: json['company_name'] as String?,
+      // Parse other fields from your Customer API response here
+      // e.g., address1: json['address1'] as String?,
+    );
+  }
+}
 
 class OrderFormPage extends StatefulWidget {
-  const OrderFormPage({super.key});
+  final Order? order; // To support editing later
+
+  const OrderFormPage({super.key, this.order});
 
   @override
   State<OrderFormPage> createState() => _OrderFormPageState();
@@ -74,116 +69,182 @@ class OrderFormPage extends StatefulWidget {
 
 class _OrderFormPageState extends State<OrderFormPage> {
   final _formKey = GlobalKey<FormState>();
+  late ApiV1 _api;
+  bool _isLoading = false; // For submitting order
+  bool _isLoadingProducts = true;
+  bool _isLoadingCustomers = false; // For loading customers in dialog
+  String _productLoadingErrorMessage = '';
 
   // --- Form State Variables ---
-  TextEditingController _customerController = TextEditingController(
-    text: "AHS3185 S02 KANESAN",
-  ); // Pre-filled
-  String? _selectedGroupId;
-  String? _selectedSubGroupId;
-  String? _selectedProductId;
+  Customer?
+  _selectedCustomer; // Holds the selected customer object with an integer ID
+  final TextEditingController _customerDisplayController =
+      TextEditingController(text: "Tap to select customer");
 
-  TextEditingController _quantityController = TextEditingController(text: "0");
+  ApiProduct? _selectedApiProduct;
+
+  final TextEditingController _quantityController = TextEditingController(
+    text: "1",
+  );
   bool _isFreeGood = false;
   bool _isTradeReturn = false;
-  bool _tradeReturnGood = true; // Default to 'Good' for trade return
-  TextEditingController _unitPriceController = TextEditingController(
+  bool _tradeReturnGood = true;
+  final TextEditingController _unitPriceController = TextEditingController(
     text: "0.00",
   );
-  TextEditingController _amountController = TextEditingController(
-    text: "0.00",
-  ); // Calculated
-  TextEditingController _discountController = TextEditingController(
+  final TextEditingController _amountController = TextEditingController(
     text: "0.00",
   );
+  final TextEditingController _discountController = TextEditingController(
+    text: "0.00",
+  );
+  final TextEditingController _remarksController = TextEditingController();
 
   List<OrderItem> _currentOrderItems = [];
+  List<ApiProduct> _apiProducts = [];
 
-  // --- Dependent Dropdown Logic ---
-  List<String> _availableSubGroupIds = [];
-  List<String> _availableProductIds = [];
+  bool get _isEditMode => widget.order != null;
 
   @override
   void initState() {
     super.initState();
-    // Add listeners to update calculated fields
+    GlobalState gs = Get.find<GlobalState>();
+    _api = ApiV1(bearerToken: gs.token);
+
+    _fetchProducts();
+
     _quantityController.addListener(_calculateAmount);
     _unitPriceController.addListener(_calculateAmount);
-    _discountController.addListener(
-      _calculateAmount,
-    ); // If discount affects line item amount directly
-    _isFreeGood = false; // Ensure it's reset
+    _discountController.addListener(_calculateAmount);
+
+    // No longer selecting dummy customer here, user will tap to select.
+
+    if (_isEditMode && widget.order != null) {
+      // If editing, try to find the customer by ID or use passed customerName
+      // This part needs a robust way to get the full Customer object if only ID is passed in widget.order.customerId
+      _customerDisplayController.text = widget.order!.customerName;
+      // For simplicity, assuming widget.order.customerId is the INT ID as string, or you have a way to get it.
+      // This is a placeholder; proper customer object loading for edit is needed.
+      // You might need to fetch the customer from API if only ID is available.
+      _selectedCustomer = Customer(
+        id:
+            int.tryParse(widget.order!.customerId) ??
+            0, // This needs to be the actual int ID
+        companyName: widget.order!.customerName,
+      );
+
+      _remarksController.text = widget.order!.remarks ?? '';
+      _currentOrderItems = List<OrderItem>.from(widget.order!.items);
+    }
+  }
+
+  Future<void> _fetchProducts() async {
+    setState(() {
+      _isLoadingProducts = true;
+      _productLoadingErrorMessage = '';
+    });
+    try {
+      // Assuming ApiV1.getProducts() returns the structure:
+      // {"error":0,"status":200,"message":"...","data":[PRODUCT_LIST]}
+      // OR a direct list on success for older ApiV1 versions.
+      final dynamic response = await _api.getProducts();
+      aLog("GetProducts Response: $response");
+      List<dynamic>? productDataList;
+      bool responseError = false;
+      String responseMessage = "Failed to load products.";
+
+      if (response is List) {
+        // Direct list from API (less likely with makeResponse)
+        productDataList = response;
+      } else if (response is Map<String, dynamic>) {
+        responseError = response['error'] == 1 || response['error'] == true;
+        responseMessage = response['message']?.toString() ?? responseMessage;
+        if (!responseError && response['data'] is List) {
+          productDataList = response['data'];
+        } else if (responseError) {
+          _productLoadingErrorMessage = responseMessage;
+        } else {
+          _productLoadingErrorMessage =
+              "Products API response format is unexpected (Map without data list).";
+        }
+      } else if (response == null) {
+        _productLoadingErrorMessage = "No response from product server.";
+      } else {
+        _productLoadingErrorMessage =
+            "Products API returned an unknown format.";
+      }
+
+      if (productDataList != null) {
+        _apiProducts =
+            productDataList
+                .map((data) {
+                  try {
+                    return ApiProduct.fromJson(data as Map<String, dynamic>);
+                  } catch (e) {
+                    aLog("Error parsing API product: $data, error: $e");
+                    return null;
+                  }
+                })
+                .whereType<ApiProduct>()
+                .toList();
+      } else if (!responseError && productDataList == null) {
+        // If not an error but list is null/not found
+        _productLoadingErrorMessage =
+            _productLoadingErrorMessage.isEmpty
+                ? "No product data found."
+                : _productLoadingErrorMessage;
+      }
+    } catch (e, s) {
+      aLog("Exception in _fetchProducts: $e\nStack trace: $s");
+      _productLoadingErrorMessage = "Error fetching products.";
+    } finally {
+      setState(() {
+        _isLoadingProducts = false;
+      });
+    }
   }
 
   @override
   void dispose() {
-    _customerController.dispose();
+    _customerDisplayController.dispose();
     _quantityController.dispose();
     _unitPriceController.dispose();
     _amountController.dispose();
     _discountController.dispose();
+    _remarksController.dispose();
     super.dispose();
   }
 
   void _calculateAmount() {
     if (_isFreeGood) {
       _amountController.text = "0.00";
-      _unitPriceController.text = "0.00"; // Free goods have no price
       return;
     }
     final double quantity = double.tryParse(_quantityController.text) ?? 0.0;
     final double unitPrice = double.tryParse(_unitPriceController.text) ?? 0.0;
-    // Assuming discount is a fixed value for simplicity in this calculation
     final double discount = double.tryParse(_discountController.text) ?? 0.0;
     final double amount = (quantity * unitPrice) - discount;
     _amountController.text = amount.toStringAsFixed(2);
   }
 
-  void _onGroupChanged(String? groupId) {
+  void _onApiProductChanged(ApiProduct? product) {
     setState(() {
-      _selectedGroupId = groupId;
-      _selectedSubGroupId = null;
-      _selectedProductId = null;
-      _unitPriceController.text = "0.00";
-      _availableSubGroupIds =
-          (groupId != null && _groupSubGroupMap.containsKey(groupId))
-              ? _groupSubGroupMap[groupId]!
-              : [];
-      _availableProductIds = [];
-      _resetProductDetails();
-    });
-  }
-
-  void _onSubGroupChanged(String? subGroupId) {
-    setState(() {
-      _selectedSubGroupId = subGroupId;
-      _selectedProductId = null;
-      _unitPriceController.text = "0.00";
-      _availableProductIds =
-          (subGroupId != null && _subGroupProductMap.containsKey(subGroupId))
-              ? _subGroupProductMap[subGroupId]!
-              : [];
-      _resetProductDetails();
-    });
-  }
-
-  void _onProductChanged(String? productId) {
-    setState(() {
-      _selectedProductId = productId;
-      if (productId != null) {
-        final product = _allProducts.firstWhere((p) => p.id == productId);
-        _unitPriceController.text =
-            _isFreeGood ? "0.00" : product.price.toStringAsFixed(2);
+      _selectedApiProduct = product;
+      if (product != null) {
+        if (_isFreeGood) _unitPriceController.text = "0.00";
+        // Price needs to be manually entered or fetched if not in ApiProduct
+        if (_quantityController.text == "0") _quantityController.text = "1";
       } else {
         _resetProductDetails();
       }
-      _calculateAmount(); // Recalculate amount when product changes
+      _calculateAmount();
     });
   }
 
   void _resetProductDetails() {
+    _selectedApiProduct = null;
     _unitPriceController.text = "0.00";
-    _quantityController.text = "0";
+    _quantityController.text = "0"; // Or "1" if you prefer
     _discountController.text = "0.00";
     _isFreeGood = false;
     _isTradeReturn = false;
@@ -192,259 +253,386 @@ class _OrderFormPageState extends State<OrderFormPage> {
   }
 
   void _addItemToOrder() {
-    if (_formKey.currentState!.validate()) {
-      if (_selectedProductId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a product.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-      final double quantity = double.tryParse(_quantityController.text) ?? 0.0;
-      if (quantity <= 0 && !_isFreeGood) {
-        // Allow 0 quantity if it's a free good placeholder or specific scenario
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Quantity must be greater than 0.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-
-      final product = _allProducts.firstWhere(
-        (p) => p.id == _selectedProductId!,
-      );
-      final unitPrice =
-          _isFreeGood
-              ? 0.0
-              : (double.tryParse(_unitPriceController.text) ?? product.price);
-
-      setState(() {
-        _currentOrderItems.add(
-          OrderItem(
-            productId: product.id,
-            productName: product.name,
-            skuCode: product.sku,
-            quantity: quantity,
-            unitPrice: unitPrice,
-            discount: double.tryParse(_discountController.text) ?? 0.0,
-            isFreeGood: _isFreeGood,
-            isTradeReturn: _isTradeReturn,
-            tradeReturnIsGood: _isTradeReturn ? _tradeReturnGood : true,
-          ),
-        );
-
-        // Reset fields for next item
-        _selectedProductId = null; // Keep group/subgroup or reset as needed
-        _quantityController.text = "0";
-        _discountController.text = "0.00";
-        _unitPriceController.text = "0.00";
-        _amountController.text = "0.00";
-        _isFreeGood = false;
-        _isTradeReturn = false;
-        _tradeReturnGood = true;
-        // Consider resetting _selectedGroupId and _selectedSubGroupId as well if desired
-        // _selectedGroupId = null;
-        // _selectedSubGroupId = null;
-        // _availableSubGroupIds = [];
-        // _availableProductIds = [];
-      });
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_selectedApiProduct == null) {
+      showVDialog(title: "Validation Error", text: "Please select a product.");
+      return;
     }
+    final double quantity = double.tryParse(_quantityController.text) ?? 0.0;
+    if (quantity <= 0 && !_isFreeGood) {
+      showVDialog(
+        title: "Validation Error",
+        text: "Quantity must be > 0 unless free good.",
+      );
+      return;
+    }
+    final double unitPrice =
+        _isFreeGood ? 0.0 : (double.tryParse(_unitPriceController.text) ?? 0.0);
+    if (!_isFreeGood && unitPrice <= 0) {
+      showVDialog(
+        title: "Validation Error",
+        text: "Unit price must be > 0 for non-free goods.",
+      );
+      return;
+    }
+
+    setState(() {
+      _currentOrderItems.add(
+        OrderItem(
+          productId:
+              _selectedApiProduct!.id
+                  .toString(), // API expects integer product ID
+          productName: _selectedApiProduct!.productName,
+          skuCode: 'N/A', // SKU not available from this simplified product API
+          quantity: quantity,
+          unitPrice: unitPrice,
+          discount: double.tryParse(_discountController.text) ?? 0.0,
+          isFreeGood: _isFreeGood,
+          isTradeReturn: _isTradeReturn,
+          tradeReturnIsGood: _isTradeReturn ? _tradeReturnGood : true,
+        ),
+      );
+      _resetProductDetails();
+      _quantityController.text = "1";
+    });
   }
 
   void _cancelItemEntry() {
     setState(() {
-      _selectedGroupId = null;
-      _selectedSubGroupId = null;
-      _selectedProductId = null;
-      _availableSubGroupIds = [];
-      _availableProductIds = [];
       _resetProductDetails();
     });
   }
 
-  double get _totalOrderAmount {
-    return _currentOrderItems.fold(0.0, (sum, item) => sum + item.amount);
+  double get _totalOrderAmount =>
+      _currentOrderItems.fold(0.0, (sum, item) => sum + item.amount);
+
+  Future<void> _submitOrder() async {
+    if (_selectedCustomer == null || _selectedCustomer!.id == 0) {
+      showVDialog(
+        title: "Validation Error",
+        text: "Please select a valid customer.",
+      );
+      return;
+    }
+    if (_currentOrderItems.isEmpty) {
+      showVDialog(
+        title: "Validation Error",
+        text: "Please add at least one item to the order.",
+      );
+      return;
+    }
+    // Additional form validation for the whole form if needed
+    // if (!(_formKey.currentState?.validate() ?? false)) {
+    //   return;
+    // }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final orderToSubmit = Order(
+      customerId:
+          _selectedCustomer!.id
+              .toString(), // Use the integer ID, converted to string for the model
+      customerName:
+          _selectedCustomer!.companyName ?? _selectedCustomer!.name ?? 'N/A',
+      items: _currentOrderItems,
+      orderDate: DateTime.now(),
+      remarks:
+          _remarksController.text.trim().isEmpty
+              ? null
+              : _remarksController.text.trim(),
+      status: 'pending',
+    );
+
+    try {
+      final Map<String, dynamic>? response = await _api.createOrder(
+        orderToSubmit.toJson(),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (response != null) {
+        bool hasErrorFlag = response['error'] == 1 || response['error'] == true;
+        int responseStatus = response['status'] as int? ?? 0;
+
+        if (!hasErrorFlag && (responseStatus >= 200 && responseStatus < 300)) {
+          await showVDialog(
+            title: "Success",
+            text: response['message'] ?? "Order created successfully!",
+          );
+          Get.back(result: true);
+        } else {
+          String errorMessage =
+              response['message']?.toString() ?? 'Failed to create order.';
+          if (responseStatus == 422 &&
+              response['data'] is Map &&
+              response['data']['errors'] is Map) {
+            Map<String, dynamic> validationErrors = response['data']['errors'];
+            StringBuffer errorsBuffer = StringBuffer(errorMessage + "\n");
+            validationErrors.forEach((field, messages) {
+              if (messages is List && messages.isNotEmpty)
+                errorsBuffer.writeln("- $field: ${messages.join(', ')}");
+            });
+            errorMessage = errorsBuffer.toString().trim();
+          }
+          showVDialog(
+            title: "Order Submission Failed (Status: $responseStatus)",
+            text: errorMessage,
+          );
+        }
+      } else {
+        showVDialog(title: "Error", text: "No response from server.");
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      showVDialog(
+        title: "Application Error",
+        text: "An error occurred: ${e.toString()}",
+      );
+    }
+  }
+
+  // Updated to fetch and allow selection of a customer
+  Future<void> _showCustomerSelectionDialog() async {
+    setState(() {
+      _isLoadingCustomers = true;
+    });
+    List<Customer> fetchedCustomers = [];
+    String? fetchError;
+
+    try {
+      // Assuming ApiV1.getCustomers() returns your makeResponse structure:
+      // {"error":0, "status":200, "message":"...", "data":[CUSTOMER_LIST]}
+      final dynamic response =
+          await _api.getCustomers(); // Use the method name you provided
+      aLog("Fetched Customers Response: $response");
+
+      if (response != null && response is Map<String, dynamic>) {
+        bool hasError = response['error'] == 1 || response['error'] == true;
+        int status = response['status'] as int? ?? 0;
+
+        if (!hasError &&
+            (status >= 200 && status < 300) &&
+            response['data'] is List) {
+          final List<dynamic> customerDataList = response['data'];
+          fetchedCustomers =
+              customerDataList
+                  .map(
+                    (data) => Customer.fromJson(data as Map<String, dynamic>),
+                  )
+                  .toList();
+        } else {
+          fetchError =
+              response['message']?.toString() ?? "Failed to fetch customers.";
+        }
+      } else if (response is List) {
+        // Fallback if API returns list directly
+        fetchedCustomers =
+            response
+                .map((data) => Customer.fromJson(data as Map<String, dynamic>))
+                .toList();
+      } else {
+        fetchError = "Invalid response format from customer API.";
+      }
+    } catch (e) {
+      fetchError = "Error fetching customers: $e";
+    } finally {
+      setState(() {
+        _isLoadingCustomers = false;
+      });
+    }
+
+    if (fetchError != null) {
+      showVDialog(title: "Error Loading Customers", text: fetchError);
+      return;
+    }
+
+    if (fetchedCustomers.isEmpty) {
+      showVDialog(title: "No Customers", text: "No customers found to select.");
+      return;
+    }
+
+    // --- Actual Dialog for Selection ---
+    // This is a simplified dialog. You might want a more sophisticated searchable list.
+    final Customer? selected = await Get.dialog<Customer>(
+      AlertDialog(
+        title: const Text('Select Customer'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child:
+              _isLoadingCustomers
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: fetchedCustomers.length,
+                    itemBuilder: (context, index) {
+                      final customer = fetchedCustomers[index];
+                      return ListTile(
+                        title: Text(
+                          customer.companyName ??
+                              customer.name ??
+                              'Unnamed Customer',
+                        ),
+                        subtitle: Text(
+                          customer.customerCode ?? 'ID: ${customer.id}',
+                        ),
+                        onTap: () {
+                          Get.back(
+                            result: customer,
+                          ); // Return the selected customer
+                        },
+                      );
+                    },
+                  ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+        ],
+      ),
+    );
+
+    if (selected != null) {
+      setState(() {
+        _selectedCustomer = selected;
+        _customerDisplayController.text =
+            selected.companyName ?? selected.name ?? 'ID: ${selected.id}';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Order'),
-        // backgroundColor: Theme.of(context).primaryColor, // Example
+        title: Text(_isEditMode ? 'Edit Order' : 'Create Order'),
+        actions: [
+          if (_isEditMode)
+            _isLoading
+                ? const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+                )
+                : IconButton(
+                  icon: const Icon(Icons.save_alt_outlined),
+                  onPressed: _submitOrder,
+                  tooltip: 'Save Changes',
+                ),
+        ],
       ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 80.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              // Customer
-              TextFormField(
-                controller: _customerController,
-                decoration: const InputDecoration(
-                  labelText: 'Customer',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
+              InkWell(
+                onTap: _showCustomerSelectionDialog,
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Customer *',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.person_search_outlined),
+                  ),
+                  child: Text(
+                    _customerDisplayController
+                        .text, // Updated to use controller
+                    style: TextStyle(
+                      fontSize: 16,
+                      color:
+                          _selectedCustomer == null
+                              ? Colors.grey.shade700
+                              : Colors.black,
+                    ),
+                  ),
                 ),
-                // readOnly: true, // If customer is selected elsewhere
-                validator:
-                    (value) =>
-                        (value == null || value.isEmpty)
-                            ? 'Please enter customer'
-                            : null,
               ),
               const SizedBox(height: 12),
 
-              // Group Dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedGroupId,
-                decoration: const InputDecoration(
-                  labelText: 'Group',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(FontAwesomeIcons.layerGroup),
-                ),
-                items:
-                    _groups.entries.map((entry) {
-                      return DropdownMenuItem<String>(
-                        value: entry.key,
-                        child: Text(entry.value),
-                      );
-                    }).toList(),
-                onChanged: _onGroupChanged,
-                validator:
-                    (value) => value == null ? 'Please select a group' : null,
-              ),
+              _isLoadingProducts
+                  ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                  : _productLoadingErrorMessage.isNotEmpty
+                  ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Text(
+                      _productLoadingErrorMessage,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  )
+                  : DropdownButtonFormField<ApiProduct>(
+                    value: _selectedApiProduct,
+                    decoration: const InputDecoration(
+                      labelText: 'Product *',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(FontAwesomeIcons.box),
+                    ),
+                    items:
+                        _apiProducts
+                            .map(
+                              (ApiProduct product) =>
+                                  DropdownMenuItem<ApiProduct>(
+                                    value: product,
+                                    child: Text(product.productName),
+                                  ),
+                            )
+                            .toList(),
+                    onChanged: _onApiProductChanged,
+                    validator:
+                        (value) =>
+                            value == null ? 'Please select a product' : null,
+                    isExpanded: true,
+                  ),
               const SizedBox(height: 12),
-
-              // Sub Group Dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedSubGroupId,
-                decoration: const InputDecoration(
-                  labelText: 'Sub Group',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(FontAwesomeIcons.objectUngroup),
-                ),
-                items:
-                    _availableSubGroupIds.map((subGroupId) {
-                      return DropdownMenuItem<String>(
-                        value: subGroupId,
-                        child: Text(_subGroups[subGroupId] ?? 'Unknown'),
-                      );
-                    }).toList(),
-                onChanged: _onSubGroupChanged,
-                validator:
-                    (value) =>
-                        _selectedGroupId != null && value == null
-                            ? 'Please select a sub group'
-                            : null,
-                disabledHint:
-                    _selectedGroupId == null
-                        ? const Text("Select Group First")
-                        : null,
-              ),
-              const SizedBox(height: 12),
-
-              // Product Dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedProductId,
-                decoration: const InputDecoration(
-                  labelText: 'Product',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(FontAwesomeIcons.box),
-                ),
-                items:
-                    _availableProductIds.map((productId) {
-                      final product = _allProducts.firstWhere(
-                        (p) => p.id == productId,
-                      );
-                      return DropdownMenuItem<String>(
-                        value: productId,
-                        child: Text(product.name),
-                      );
-                    }).toList(),
-                onChanged: _onProductChanged,
-                validator:
-                    (value) =>
-                        _selectedSubGroupId != null && value == null
-                            ? 'Please select a product'
-                            : null,
-                disabledHint:
-                    _selectedSubGroupId == null
-                        ? const Text("Select Sub Group First")
-                        : null,
-              ),
-              const SizedBox(height: 12),
-
-              // Quantity
-              TextFormField(
-                controller: _quantityController,
-                decoration: const InputDecoration(
-                  labelText: 'Quantity',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(FontAwesomeIcons.cubesStacked),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Enter quantity';
-                  if (double.tryParse(value) == null) return 'Invalid number';
-                  if (!_isFreeGood && (double.tryParse(value) ?? 0) <= 0)
+              _buildTextFormField(
+                _quantityController,
+                'Quantity *',
+                FontAwesomeIcons.cubesStacked,
+                TextInputType.number,
+                (v) {
+                  if (v == null || v.isEmpty) return 'Enter quantity';
+                  if (double.tryParse(v) == null) return 'Invalid number';
+                  if (!_isFreeGood && (double.tryParse(v) ?? 0) <= 0)
                     return 'Quantity > 0';
                   return null;
                 },
               ),
               const SizedBox(height: 12),
-
-              // Free Goods Checkbox
               CheckboxListTile(
                 title: const Text("Free Goods"),
                 value: _isFreeGood,
-                onChanged: (bool? value) {
-                  setState(() {
-                    _isFreeGood = value ?? false;
-                    if (_isFreeGood) {
-                      _isTradeReturn =
-                          false; // Cannot be both free and trade return
-                      _unitPriceController.text =
-                          "0.00"; // Free goods have no price
-                    } else if (_selectedProductId != null) {
-                      // Restore price if unchecked and product selected
-                      final product = _allProducts.firstWhere(
-                        (p) => p.id == _selectedProductId!,
-                      );
-                      _unitPriceController.text = product.price.toStringAsFixed(
-                        2,
-                      );
-                    }
-                    _calculateAmount();
-                  });
-                },
+                onChanged:
+                    (val) => setState(() {
+                      _isFreeGood = val ?? false;
+                      if (_isFreeGood) {
+                        _isTradeReturn = false;
+                        _unitPriceController.text = "0.00";
+                      }
+                      _calculateAmount();
+                    }),
                 controlAffinity: ListTileControlAffinity.leading,
-                activeColor: Theme.of(context).primaryColor,
               ),
-              const SizedBox(height: 0),
-
-              // Trade Return Checkboxes
               CheckboxListTile(
                 title: const Text("Trade Return"),
                 value: _isTradeReturn,
-                onChanged: (bool? value) {
-                  setState(() {
-                    _isTradeReturn = value ?? false;
-                    if (_isTradeReturn) {
-                      _isFreeGood =
-                          false; // Cannot be both free and trade return
-                    }
-                    _calculateAmount(); // Recalculate if needed
-                  });
-                },
+                onChanged:
+                    (val) => setState(() {
+                      _isTradeReturn = val ?? false;
+                      if (_isTradeReturn) _isFreeGood = false;
+                    }),
                 controlAffinity: ListTileControlAffinity.leading,
-                activeColor: Theme.of(context).primaryColor,
               ),
               if (_isTradeReturn)
                 Padding(
@@ -456,79 +644,61 @@ class _OrderFormPageState extends State<OrderFormPage> {
                       ChoiceChip(
                         label: const Text('Good'),
                         selected: _tradeReturnGood,
-                        onSelected: (selected) {
-                          setState(() => _tradeReturnGood = true);
-                        },
+                        onSelected:
+                            (s) => setState(() => _tradeReturnGood = true),
                         selectedColor: Colors.green.shade100,
                       ),
                       const SizedBox(width: 8),
                       ChoiceChip(
                         label: const Text('Bad'),
                         selected: !_tradeReturnGood,
-                        onSelected: (selected) {
-                          setState(() => _tradeReturnGood = false);
-                        },
+                        onSelected:
+                            (s) => setState(() => _tradeReturnGood = false),
                         selectedColor: Colors.red.shade100,
                       ),
                     ],
                   ),
                 ),
               const SizedBox(height: 12),
-
-              // Unit Price
-              TextFormField(
-                controller: _unitPriceController,
-                decoration: const InputDecoration(
-                  labelText: 'Unit Price',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(FontAwesomeIcons.dollarSign),
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                readOnly: _isFreeGood, // Price is 0 if free good
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Enter unit price';
-                  if (double.tryParse(value) == null) return 'Invalid number';
+              _buildTextFormField(
+                _unitPriceController,
+                'Unit Price *',
+                FontAwesomeIcons.dollarSign,
+                const TextInputType.numberWithOptions(decimal: true),
+                (v) {
+                  if (v == null || v.isEmpty) return 'Enter unit price';
+                  final price = double.tryParse(v);
+                  if (price == null) return 'Invalid number';
+                  if (!_isFreeGood && price <= 0)
+                    return 'Price must be > 0 for non-free goods';
                   return null;
                 },
+                readOnly: _isFreeGood,
               ),
               const SizedBox(height: 12),
-
-              // Amount (Calculated)
-              TextFormField(
-                controller: _amountController,
-                decoration: const InputDecoration(
-                  labelText: 'Amount',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(FontAwesomeIcons.moneyBillWave),
-                ),
+              _buildTextFormField(
+                _amountController,
+                'Amount',
+                FontAwesomeIcons.moneyBillWave,
+                TextInputType.number,
+                null,
                 readOnly: true,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-
-              // Discount
-              TextFormField(
-                controller: _discountController,
-                decoration: const InputDecoration(
-                  labelText: 'Discount',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(FontAwesomeIcons.tags),
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty)
+              _buildTextFormField(
+                _discountController,
+                'Discount',
+                FontAwesomeIcons.tags,
+                const TextInputType.numberWithOptions(decimal: true),
+                (v) {
+                  if (v == null || v.isEmpty)
                     return 'Enter discount (0 if none)';
-                  if (double.tryParse(value) == null) return 'Invalid number';
+                  if (double.tryParse(v) == null) return 'Invalid number';
                   return null;
                 },
               ),
               const SizedBox(height: 20),
-
-              // Add / Cancel Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -563,8 +733,6 @@ class _OrderFormPageState extends State<OrderFormPage> {
               const SizedBox(height: 24),
               const Divider(thickness: 1),
               const SizedBox(height: 16),
-
-              // --- List of Added Items ---
               Text(
                 'Order Items:',
                 style: Theme.of(context).textTheme.titleLarge,
@@ -572,71 +740,8 @@ class _OrderFormPageState extends State<OrderFormPage> {
               const SizedBox(height: 8),
               _currentOrderItems.isEmpty
                   ? const Center(child: Text('No items added yet.'))
-                  : ListView.builder(
-                    shrinkWrap: true,
-                    physics:
-                        const NeverScrollableScrollPhysics(), // To use inside SingleChildScrollView
-                    itemCount: _currentOrderItems.length,
-                    itemBuilder: (context, index) {
-                      final item = _currentOrderItems[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 4.0),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            child: Text(item.skuCode.substring(0, 1)),
-                          ),
-                          title: Text("${item.productName} (${item.skuCode})"),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Qty: ${item.quantity}, Price: ${item.unitPrice.toStringAsFixed(2)}',
-                              ),
-                              if (item.discount > 0)
-                                Text(
-                                  'Disc: ${item.discountValue.toStringAsFixed(2)}',
-                                  style: const TextStyle(color: Colors.orange),
-                                ),
-                              if (item.isFreeGood)
-                                const Text(
-                                  'Free Good',
-                                  style: TextStyle(
-                                    color: Colors.green,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              if (item.isTradeReturn)
-                                Text(
-                                  'Trade Return: ${item.tradeReturnIsGood ? "Good" : "Bad"}',
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                            ],
-                          ),
-                          trailing: Text(
-                            'Amt: ${item.amount.toStringAsFixed(2)}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          // Add an option to remove or edit item if needed
-                          onLongPress: () {
-                            setState(() {
-                              _currentOrderItems.removeAt(index);
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('${item.productName} removed'),
-                                backgroundColor: Colors.redAccent,
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
+                  : _buildOrderItemsList(),
               const SizedBox(height: 16),
-              // --- Total Amount ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -653,63 +758,123 @@ class _OrderFormPageState extends State<OrderFormPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Submit Order'),
-                onPressed: () {
-                  if (_currentOrderItems.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please add items to the order first.'),
-                        backgroundColor: Colors.orange,
-                      ),
-                    );
-                    return;
-                  }
-                  // TODO: Implement order submission logic
-                  final orderToSubmit = Order(
-                    customerId:
-                        _customerController.text.split(
-                          " ",
-                        )[0], // Assuming ID is first part
-                    customerName: _customerController.text, // Full name
-                    items: _currentOrderItems,
-                    orderDate: DateTime.now(),
-                  );
-                  print('Submitting Order:');
-                  print('Customer: ${orderToSubmit.customerName}');
-                  print('Total: ${orderToSubmit.totalAmount}');
-                  orderToSubmit.items.forEach(
-                    (item) => print(
-                      '  - ${item.productName}: ${item.quantity} @ ${item.unitPrice}',
-                    ),
-                  );
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Order submitted for ${orderToSubmit.customerName}!',
-                      ),
-                      backgroundColor: Colors.teal,
-                    ),
-                  );
-                  // Potentially navigate away or clear the form
-                },
-                style: ElevatedButton.styleFrom(
-                  // backgroundColor: Theme.of(context).primaryColor,
-                  // foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _remarksController,
+                decoration: const InputDecoration(
+                  labelText: 'Remarks (Optional)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.notes_outlined),
                 ),
+                maxLines: 3,
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton:
+          _isLoading
+              ? FloatingActionButton(
+                onPressed: null,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.0,
+                ),
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+              )
+              : FloatingActionButton.extended(
+                onPressed: _submitOrder,
+                icon: const Icon(Icons.check_circle_outline),
+                label: Text(_isEditMode ? 'Update Order' : 'Submit Order'),
+              ),
+    );
+  }
+
+  Widget _buildOrderItemsList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _currentOrderItems.length,
+      itemBuilder: (context, index) {
+        final item = _currentOrderItems[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 4.0),
+          child: ListTile(
+            leading: CircleAvatar(
+              child: Text(item.skuCode.isNotEmpty ? item.skuCode[0] : 'P'),
+            ),
+            title: Text("${item.productName} (${item.skuCode})"),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Qty: ${item.quantity}, Price: ${item.unitPrice.toStringAsFixed(2)}',
+                ),
+                if (item.discount > 0)
+                  Text(
+                    'Disc: ${item.discount.toStringAsFixed(2)}',
+                    style: const TextStyle(color: Colors.orange),
+                  ),
+                if (item.isFreeGood)
+                  const Text(
+                    'Free Good',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                if (item.isTradeReturn)
+                  Text(
+                    'Trade Return: ${item.tradeReturnIsGood ? "Good" : "Bad"}',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+              ],
+            ),
+            trailing: Text(
+              'Amt: ${item.amount.toStringAsFixed(2)}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            onLongPress:
+                () => setState(() {
+                  _currentOrderItems.removeAt(index);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${item.productName} removed'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTextFormField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+    TextInputType inputType,
+    String? Function(String?)? validator, {
+    bool readOnly = false,
+    TextStyle? textStyle,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        prefixIcon: Icon(icon),
+      ),
+      keyboardType: inputType,
+      validator: validator,
+      readOnly: readOnly,
+      style: textStyle,
     );
   }
 }
