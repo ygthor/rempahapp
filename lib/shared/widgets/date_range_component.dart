@@ -5,8 +5,13 @@ class DateRangeComponent extends StatefulWidget {
   final Function(DateTimeRange?)
   onDateRangeChanged; // Callback to notify parent of date changes
 
-  const DateRangeComponent({Key? key, required this.onDateRangeChanged})
-    : super(key: key);
+  final DateTimeRange? currentValue;
+
+  const DateRangeComponent({
+    Key? key,
+    required this.onDateRangeChanged,
+    this.currentValue,
+  }) : super(key: key);
 
   @override
   _DateRangeComponentState createState() => _DateRangeComponentState();
@@ -21,18 +26,60 @@ class _DateRangeComponentState extends State<DateRangeComponent> {
     'Last Month',
     'Custom Range',
   ];
-  DateTimeRange? _selectedDateRange;
 
   @override
   void initState() {
     super.initState();
     // _updateDataBasedOnFilter(); // Initialize with default filter
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final current = widget.currentValue;
+
+    if (current != null) {
+      final start = DateTime(
+        current.start.year,
+        current.start.month,
+        current.start.day,
+      );
+      final end = DateTime(
+        current.end.year,
+        current.end.month,
+        current.end.day,
+      );
+
+      if (start == today.subtract(const Duration(days: 6)) && end == today) {
+        _selectedFilterOption = 'Last 7 Days';
+      } else if (start == today.subtract(const Duration(days: 29)) &&
+          end == today) {
+        _selectedFilterOption = 'Last 30 Days';
+      } else if (start == DateTime(today.year, today.month, 1) &&
+          end == today) {
+        _selectedFilterOption = 'This Month';
+      } else {
+        final firstDayOfCurrentMonth = DateTime(today.year, today.month, 1);
+        final lastDayOfLastMonth = firstDayOfCurrentMonth.subtract(
+          const Duration(days: 1),
+        );
+        final firstDayOfLastMonth = DateTime(
+          lastDayOfLastMonth.year,
+          lastDayOfLastMonth.month,
+          1,
+        );
+        if (start == firstDayOfLastMonth && end == lastDayOfLastMonth) {
+          _selectedFilterOption = 'Last Month';
+        } else {
+          _selectedFilterOption = 'Custom Range';
+        }
+      }
+    } else {
+      _selectedFilterOption = 'Last 7 Days'; // default
+    }
   }
 
   Future<void> _pickDateRange() async {
     final now = DateTime.now();
     final initialDateRange =
-        _selectedDateRange ??
+        widget.currentValue ??
         DateTimeRange(start: now.subtract(const Duration(days: 7)), end: now);
     final newDateRange = await showDateRangePicker(
       context: context,
@@ -60,38 +107,34 @@ class _DateRangeComponentState extends State<DateRangeComponent> {
     );
 
     if (newDateRange != null) {
-      setState(() {
-        _selectedDateRange = newDateRange;
-        // If a custom range is picked, ensure the dropdown reflects "Custom Range"
-        // This is important if _pickDateRange is called programmatically
-        _selectedFilterOption = 'Custom Range';
-      });
-      widget.onDateRangeChanged(_selectedDateRange);
+      print("newDateRange:" + newDateRange.toString());
+      widget.onDateRangeChanged(newDateRange);
     }
   }
 
-  void _updateDataBasedOnFilter() {
+  void _updateDataBasedOnFilter(String filterValue) async {
     final now = DateTime.now();
     DateTimeRange? newRange;
 
-    switch (_selectedFilterOption) {
+    DateTime dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
+
+    switch (filterValue) {
       case 'Last 7 Days':
         newRange = DateTimeRange(
-          start: now.subtract(const Duration(days: 6)), // Inclusive of today
-          end: now,
+          start: dateOnly(now.subtract(const Duration(days: 6))),
+          end: dateOnly(now),
         );
         break;
       case 'Last 30 Days':
         newRange = DateTimeRange(
-          start: now.subtract(const Duration(days: 29)), // Inclusive of today
-          end: now,
+          start: dateOnly(now.subtract(const Duration(days: 29))),
+          end: dateOnly(now),
         );
         break;
       case 'This Month':
         newRange = DateTimeRange(
           start: DateTime(now.year, now.month, 1),
-          end:
-              now, // Could also be end of month: DateTime(now.year, now.month + 1, 0).subtract(Duration(microseconds: 1))
+          end: dateOnly(now),
         );
         break;
       case 'Last Month':
@@ -106,30 +149,19 @@ class _DateRangeComponentState extends State<DateRangeComponent> {
         );
         newRange = DateTimeRange(
           start: firstDayOfLastMonth,
-          end: lastDayOfLastMonth,
+          end: dateOnly(lastDayOfLastMonth),
         );
         break;
       case 'Custom Range':
-        // If it's already custom range, we don't override _selectedDateRange here.
-        // _selectedDateRange is set by _pickDateRange.
-        // If _selectedDateRange is null, it means the user hasn't picked yet.
-        newRange = _selectedDateRange;
-        break;
+        await _pickDateRange();
+        return; // Exit early since _pickDateRange will handle callback
       default:
         newRange = null;
     }
 
-    setState(() {
-      if (_selectedFilterOption != 'Custom Range') {
-        _selectedDateRange =
-            newRange; // Update _selectedDateRange for predefined filters
-      }
-    });
-
-    // Notify parent widget about the change
-    widget.onDateRangeChanged(
-      newRange,
-    ); // Pass the calculated or selected range
+    if (newRange != null) {
+      widget.onDateRangeChanged(newRange);
+    }
   }
 
   @override
@@ -137,6 +169,7 @@ class _DateRangeComponentState extends State<DateRangeComponent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Text(widget.currentValue.toString()),
         // ----- ADDED FILTERS -----
         Row(
           crossAxisAlignment:
@@ -171,21 +204,7 @@ class _DateRangeComponentState extends State<DateRangeComponent> {
                     }).toList(),
                 onChanged: (String? newValue) {
                   if (newValue != null) {
-                    setState(() {
-                      _selectedFilterOption = newValue;
-                      if (_selectedFilterOption != 'Custom Range') {
-                        _selectedDateRange =
-                            null; // Clear custom range if a predefined one is selected
-                        _updateDataBasedOnFilter();
-                      } else {
-                        // If "Custom Range" is selected and no range is set yet, open picker.
-                        // If a range IS set, _updateDataBasedOnFilter will use it.
-                        _updateDataBasedOnFilter(); // This will pass the current _selectedDateRange (if any)
-                        if (_selectedDateRange == null) {
-                          _pickDateRange();
-                        }
-                      }
-                    });
+                    _updateDataBasedOnFilter(newValue);
                   }
                 },
               ),
@@ -198,9 +217,9 @@ class _DateRangeComponentState extends State<DateRangeComponent> {
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.calendar_today, size: 18),
                   label: Text(
-                    _selectedDateRange == null
+                    widget.currentValue == null
                         ? 'Select Dates'
-                        : '${DateFormat.yMd().format(_selectedDateRange!.start)}\n${DateFormat.yMd().format(_selectedDateRange!.end)}',
+                        : '${DateFormat.yMd().format(widget.currentValue!.start)}\n${DateFormat.yMd().format(widget.currentValue!.end)}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 12),
                     overflow: TextOverflow.ellipsis, // Handle long dates

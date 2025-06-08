@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-// --- Data Models ---
+// Assuming models and services are in these paths
+import 'package:rempahapp/api/api_v1.dart';
+import 'package:rempahapp/models/global_state.dart';
+import 'package:rempahapp/shared/functions.dart';
+import 'package:get/get.dart';
+
+// --- Data Model ---
 class InventoryItem {
   final String skuCode;
-  final String productName; // Optional: for more context
+  final String productName;
   final double quantity;
   final String groupId;
   final String subGroupId;
-  final String inventoryType; // e.g., "GOOD", "DAMAGED", "EXPIRED"
+  final String inventoryType;
 
   InventoryItem({
     required this.skuCode,
@@ -18,17 +24,25 @@ class InventoryItem {
     required this.subGroupId,
     required this.inventoryType,
   });
+
+  factory InventoryItem.fromJson(Map<String, dynamic> json) {
+    return InventoryItem(
+      skuCode: json['skuCode'] as String? ?? 'N/A',
+      productName: json['productName'] as String? ?? 'Unknown',
+      quantity: (json['quantity'] as num?)?.toDouble() ?? 0.0,
+      groupId: json['groupId'] as String? ?? '',
+      subGroupId: json['subGroupId'] as String? ?? '',
+      inventoryType: json['inventoryType'] as String? ?? 'GOOD',
+    );
+  }
 }
 
-// Mock data for groups, subgroups, and inventory types
-// In a real app, these would come from your backend or a shared data source.
-// Using similar group/subgroup structure from previous examples for consistency.
+// Data for dropdowns - these should also be fetched from an API in a real app
 final Map<String, String> _inventoryGroups = {
   'g1': 'Herbs & Spices',
   'g2': 'Sauces & Pastes',
   'g3': 'Grains & Flours',
 };
-
 final Map<String, String> _inventorySubGroups = {
   'sg1_1': 'Whole Spices',
   'sg1_2': 'Ground Spices',
@@ -37,171 +51,12 @@ final Map<String, String> _inventorySubGroups = {
   'sg3_1': 'Rice Varieties',
   'sg3_2': 'Specialty Flours',
 };
-
-// Group -> SubGroups mapping
 final Map<String, List<String>> _groupSubGroupInventoryMap = {
   'g1': ['sg1_1', 'sg1_2'],
   'g2': ['sg2_1', 'sg2_2'],
   'g3': ['sg3_1', 'sg3_2'],
 };
-
 final List<String> _inventoryTypes = ['GOOD', 'DAMAGED', 'EXPIRED', 'RETURNED'];
-
-// --- Mock Inventory Data ---
-final List<InventoryItem> _allInventoryItems = [
-  InventoryItem(
-    skuCode: 'ABBM',
-    productName: 'Star Anise',
-    quantity: 3.5,
-    groupId: 'g1',
-    subGroupId: 'sg1_1',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'BC2',
-    productName: 'Cumin Powder',
-    quantity: 0.0,
-    groupId: 'g1',
-    subGroupId: 'sg1_2',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'BK10K',
-    productName: 'Turmeric Powder',
-    quantity: 8.0,
-    groupId: 'g1',
-    subGroupId: 'sg1_2',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'BKBK1',
-    productName: 'Cinnamon Sticks',
-    quantity: 11.0,
-    groupId: 'g1',
-    subGroupId: 'sg1_1',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'BL2',
-    productName: 'Chili Flakes',
-    quantity: 0.0,
-    groupId: 'g1',
-    subGroupId: 'sg1_1',
-    inventoryType: 'DAMAGED',
-  ),
-  InventoryItem(
-    skuCode: 'L500',
-    productName: 'Soy Sauce',
-    quantity: 3.0,
-    groupId: 'g2',
-    subGroupId: 'sg2_1',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'BR2',
-    productName: 'Tomato Paste',
-    quantity: 0.0,
-    groupId: 'g2',
-    subGroupId: 'sg2_2',
-    inventoryType: 'EXPIRED',
-  ),
-  InventoryItem(
-    skuCode: 'BSEL2',
-    productName: 'Basmati Rice',
-    quantity: 0.0,
-    groupId: 'g3',
-    subGroupId: 'sg3_1',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'C1KK',
-    productName: 'Gram Flour',
-    quantity: 0.0,
-    groupId: 'g3',
-    subGroupId: 'sg3_2',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'C20K',
-    productName: 'Cloves',
-    quantity: 5.0,
-    groupId: 'g1',
-    subGroupId: 'sg1_1',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'B3',
-    productName: 'Mustard Seeds',
-    quantity: 0.0,
-    groupId: 'g1',
-    subGroupId: 'sg1_1',
-    inventoryType: 'RETURNED',
-  ),
-  InventoryItem(
-    skuCode: 'G30',
-    productName: 'Fish Curry Paste',
-    quantity: 7.0,
-    groupId: 'g2',
-    subGroupId: 'sg2_2',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'GCM',
-    productName: 'Cardamom Pods',
-    quantity: 19.0,
-    groupId: 'g1',
-    subGroupId: 'sg1_1',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'GJ',
-    productName: 'Jasmine Rice',
-    quantity: 36.0,
-    groupId: 'g3',
-    subGroupId: 'sg3_1',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'GKV',
-    productName: 'Oyster Sauce',
-    quantity: 0.0,
-    groupId: 'g2',
-    subGroupId: 'sg2_1',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'GR',
-    productName: 'Rice Flour',
-    quantity: 12.0,
-    groupId: 'g3',
-    subGroupId: 'sg3_2',
-    inventoryType: 'DAMAGED',
-  ),
-  InventoryItem(
-    skuCode: 'HC2',
-    productName: 'Coriander Powder',
-    quantity: 6.5,
-    groupId: 'g1',
-    subGroupId: 'sg1_2',
-    inventoryType: 'GOOD',
-  ),
-  InventoryItem(
-    skuCode: 'IC',
-    productName: 'Almond Flour',
-    quantity: 0.0,
-    groupId: 'g3',
-    subGroupId: 'sg3_2',
-    inventoryType: 'EXPIRED',
-  ),
-  InventoryItem(
-    skuCode: 'JM1K',
-    productName: 'Szechuan Peppercorns',
-    quantity: 2.0,
-    groupId: 'g1',
-    subGroupId: 'sg1_1',
-    inventoryType: 'GOOD',
-  ),
-];
 
 class InventoryListPage extends StatefulWidget {
   const InventoryListPage({super.key});
@@ -211,74 +66,100 @@ class InventoryListPage extends StatefulWidget {
 }
 
 class _InventoryListPageState extends State<InventoryListPage> {
+  late ApiV1 _api;
+  bool _isLoading = true;
+  String _errorMessage = '';
+
   // --- Filter State Variables ---
   String? _selectedGroupId;
   String? _selectedSubGroupId;
-  String? _selectedInventoryType =
-      'GOOD'; // Default to 'GOOD' as per screenshot
+  String? _selectedInventoryType = 'GOOD';
 
   List<InventoryItem> _filteredInventoryItems = [];
-  List<String> _availableSubGroupIds = []; // For dependent dropdown
+  List<String> _availableSubGroupIds = [];
 
   @override
   void initState() {
     super.initState();
-    _applyFilters(); // Apply default filters on initial load
+    GlobalState gs = Get.find<GlobalState>();
+    _api = ApiV1(bearerToken: gs.token);
+    _fetchInventory();
   }
 
-  void _applyFilters() {
+  Future<void> _fetchInventory() async {
     setState(() {
-      _filteredInventoryItems =
-          _allInventoryItems.where((item) {
-            final bool groupMatch =
-                _selectedGroupId == null || item.groupId == _selectedGroupId;
-            final bool subGroupMatch =
-                _selectedSubGroupId == null ||
-                item.subGroupId == _selectedSubGroupId;
-            final bool typeMatch =
-                _selectedInventoryType == null ||
-                item.inventoryType == _selectedInventoryType;
-            return groupMatch && subGroupMatch && typeMatch;
-          }).toList();
-      // Sort by SKU code for consistent display
-      _filteredInventoryItems.sort((a, b) => a.skuCode.compareTo(b.skuCode));
+      _isLoading = true;
+      _errorMessage = '';
     });
+
+    try {
+      final response = await _api.getInventory(
+        groupId: _selectedGroupId,
+        subGroupId: _selectedSubGroupId,
+        inventoryType: _selectedInventoryType,
+      );
+
+      if (response != null &&
+          response['error'] != true &&
+          response['data'] is List) {
+        final List<dynamic> itemsData = response['data'];
+        setState(() {
+          _filteredInventoryItems =
+              itemsData
+                  .map(
+                    (data) =>
+                        InventoryItem.fromJson(data as Map<String, dynamic>),
+                  )
+                  .toList();
+          _filteredInventoryItems.sort(
+            (a, b) => a.skuCode.compareTo(b.skuCode),
+          );
+        });
+      } else {
+        setState(
+          () =>
+              _errorMessage =
+                  response?['message']?.toString() ??
+                  'Failed to load inventory.',
+        );
+      }
+    } catch (e) {
+      setState(() => _errorMessage = 'An application error occurred.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void _onGroupChanged(String? groupId) {
     setState(() {
       _selectedGroupId = groupId;
-      _selectedSubGroupId = null; // Reset sub-group when group changes
+      _selectedSubGroupId = null;
       _availableSubGroupIds =
           (groupId != null && _groupSubGroupInventoryMap.containsKey(groupId))
               ? _groupSubGroupInventoryMap[groupId]!
               : [];
     });
-    _applyFilters();
+    _fetchInventory();
   }
 
   void _onSubGroupChanged(String? subGroupId) {
-    setState(() {
-      _selectedSubGroupId = subGroupId;
-    });
-    _applyFilters();
+    setState(() => _selectedSubGroupId = subGroupId);
+    _fetchInventory();
   }
 
   void _onInventoryTypeChanged(String? inventoryType) {
-    setState(() {
-      _selectedInventoryType = inventoryType;
-    });
-    _applyFilters();
+    setState(() => _selectedInventoryType = inventoryType);
+    _fetchInventory();
   }
 
   void _clearFilters() {
     setState(() {
       _selectedGroupId = null;
       _selectedSubGroupId = null;
-      _selectedInventoryType = 'GOOD'; // Reset to default or null as preferred
+      _selectedInventoryType = 'GOOD';
       _availableSubGroupIds = [];
     });
-    _applyFilters();
+    _fetchInventory();
   }
 
   @override
@@ -290,16 +171,7 @@ class _InventoryListPageState extends State<InventoryListPage> {
           IconButton(
             icon: const Icon(Icons.refresh_outlined),
             tooltip: 'Refresh Stock',
-            onPressed: () {
-              // TODO: Implement actual refresh logic (e.g., re-fetch from API)
-              _applyFilters(); // Re-apply filters with current mock data
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Inventory refreshed (mock data).'),
-                  duration: Duration(seconds: 1),
-                ),
-              );
-            },
+            onPressed: _isLoading ? null : _fetchInventory,
           ),
         ],
       ),
@@ -310,73 +182,68 @@ class _InventoryListPageState extends State<InventoryListPage> {
           _buildInventoryListHeader(),
           Expanded(
             child:
-                _filteredInventoryItems.isEmpty
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _errorMessage.isNotEmpty
                     ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            FontAwesomeIcons.boxesStacked,
-                            size: 60,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'No inventory items found.',
-                            style: TextStyle(fontSize: 18, color: Colors.grey),
-                          ),
-                          if (_selectedGroupId != null ||
-                              _selectedSubGroupId != null ||
-                              _selectedInventoryType != null)
-                            const Text(
-                              'Try adjusting your filters.',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                        ],
+                      child: Text(
+                        _errorMessage,
+                        style: const TextStyle(color: Colors.red),
                       ),
                     )
-                    : ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
+                    : _filteredInventoryItems.isEmpty
+                    ? Center(
+                      child: Text(
+                        'No inventory items found for the selected filters.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
-                      itemCount: _filteredInventoryItems.length,
-                      itemBuilder: (context, index) {
-                        final item = _filteredInventoryItems[index];
-                        return Row(
-                          children: [
-                            Expanded(
-                              flex: 3, // SKU Code takes more space
-                              child: Text(
-                                item.skuCode,
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2, // Quantity
-                              child: Text(
-                                item.quantity.toStringAsFixed(
-                                  1,
-                                ), // Display quantity with 1 decimal place
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight:
-                                      item.quantity > 0
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                  color:
-                                      item.quantity > 0
-                                          ? Colors.black87
-                                          : Colors.grey.shade600,
+                    )
+                    : RefreshIndicator(
+                      onRefresh: _fetchInventory,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 8.0,
+                        ),
+                        itemCount: _filteredInventoryItems.length,
+                        itemBuilder: (context, index) {
+                          final item = _filteredInventoryItems[index];
+                          return Row(
+                            children: [
+                              Expanded(
+                                flex: 10,
+                                child: Text(
+                                  item.skuCode + " " + item.productName,
+                                  style: const TextStyle(fontSize: 14),
                                 ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
-                      separatorBuilder:
-                          (context, index) => const Divider(height: 12),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  item.quantity.toStringAsFixed(1),
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight:
+                                        item.quantity > 0
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                    color:
+                                        item.quantity > 0
+                                            ? Colors.black87
+                                            : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                        separatorBuilder:
+                            (context, index) => const Divider(height: 12),
+                      ),
                     ),
           ),
         ],
@@ -389,7 +256,6 @@ class _InventoryListPageState extends State<InventoryListPage> {
       padding: const EdgeInsets.all(12.0),
       child: Column(
         children: [
-          // Group Filter
           DropdownButtonFormField<String>(
             value: _selectedGroupId,
             decoration: InputDecoration(
@@ -399,10 +265,6 @@ class _InventoryListPageState extends State<InventoryListPage> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 14,
-              ),
             ),
             isExpanded: true,
             items: [
@@ -410,18 +272,18 @@ class _InventoryListPageState extends State<InventoryListPage> {
                 value: null,
                 child: Text('All Groups'),
               ),
-              ..._inventoryGroups.entries.map((entry) {
-                return DropdownMenuItem<String>(
-                  value: entry.key,
-                  child: Text(entry.value),
-                );
-              }).toList(),
+              ..._inventoryGroups.entries
+                  .map(
+                    (e) => DropdownMenuItem<String>(
+                      value: e.key,
+                      child: Text(e.value),
+                    ),
+                  )
+                  .toList(),
             ],
             onChanged: _onGroupChanged,
           ),
           const SizedBox(height: 10),
-
-          // Sub Group Filter
           DropdownButtonFormField<String>(
             value: _selectedSubGroupId,
             decoration: InputDecoration(
@@ -434,10 +296,6 @@ class _InventoryListPageState extends State<InventoryListPage> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 14,
-              ),
             ),
             isExpanded: true,
             disabledHint:
@@ -449,21 +307,18 @@ class _InventoryListPageState extends State<InventoryListPage> {
                 value: null,
                 child: Text('All Sub Groups'),
               ),
-              ..._availableSubGroupIds.map((subGroupId) {
-                return DropdownMenuItem<String>(
-                  value: subGroupId,
-                  child: Text(_inventorySubGroups[subGroupId] ?? 'Unknown'),
-                );
-              }).toList(),
+              ..._availableSubGroupIds
+                  .map(
+                    (id) => DropdownMenuItem<String>(
+                      value: id,
+                      child: Text(_inventorySubGroups[id] ?? 'Unknown'),
+                    ),
+                  )
+                  .toList(),
             ],
-            onChanged:
-                _selectedGroupId != null
-                    ? _onSubGroupChanged
-                    : null, // Enable only if group is selected
+            onChanged: _selectedGroupId != null ? _onSubGroupChanged : null,
           ),
           const SizedBox(height: 10),
-
-          // Inventory Type Filter
           DropdownButtonFormField<String>(
             value: _selectedInventoryType,
             decoration: InputDecoration(
@@ -473,10 +328,6 @@ class _InventoryListPageState extends State<InventoryListPage> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 14,
-              ),
             ),
             isExpanded: true,
             items: [
@@ -484,9 +335,14 @@ class _InventoryListPageState extends State<InventoryListPage> {
                 value: null,
                 child: Text('All Types'),
               ),
-              ..._inventoryTypes.map((type) {
-                return DropdownMenuItem<String>(value: type, child: Text(type));
-              }).toList(),
+              ..._inventoryTypes
+                  .map(
+                    (type) => DropdownMenuItem<String>(
+                      value: type,
+                      child: Text(type),
+                    ),
+                  )
+                  .toList(),
             ],
             onChanged: _onInventoryTypeChanged,
           ),
@@ -496,7 +352,6 @@ class _InventoryListPageState extends State<InventoryListPage> {
             label: const Text('Clear Filters'),
             onPressed: _clearFilters,
             style: OutlinedButton.styleFrom(
-              // foregroundColor: Theme.of(context).colorScheme.secondary,
               side: BorderSide(color: Colors.grey.shade400),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),

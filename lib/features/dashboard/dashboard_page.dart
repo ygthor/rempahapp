@@ -6,6 +6,7 @@ import 'package:rempahapp/features/auth/auth_controller.dart';
 import 'package:rempahapp/features/dashboard/app_drawer.dart';
 import 'package:rempahapp/shared/constant.dart';
 import 'package:rempahapp/shared/widgets/date_range_component.dart';
+import 'package:rempahapp/api/api_v1.dart';
 
 import '../../models/global_state.dart';
 
@@ -14,26 +15,81 @@ class DashboardPage extends StatefulWidget {
   _DashboardPageState createState() => _DashboardPageState();
 }
 
-DateTimeRange? _selectedRange;
-
 class _DashboardPageState extends State<DashboardPage> {
   AuthController authController = AuthController();
+  bool _isLoading = false;
+  DateTimeRange? _selectedRange;
+  Map<String, dynamic> _dashboardData = {
+    'totalRevenue': 'RM 0.00',
+    'nettSales': 'RM 0.00',
+    'totalCollections': 'RM 0.00',
+    'outstandingDebt': 'RM 0.00',
+    'inventoryValue': 'RM 0.00',
+    'invoicesIssued': '0',
+    'receiptsIssued': '0',
+    'newCustomers': '0',
+    'pendingOrders': '0',
+    'lowStockItems': '0',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDashboardData();
+  }
+
+  Future<void> _fetchDashboardData() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+
+    try {
+      String? date_from;
+      String? date_to;
+
+      if (_selectedRange != null) {
+        date_from = _selectedRange!.start.toString().split(' ')[0];
+        date_to = _selectedRange!.end.toString().split(' ')[0];
+      }
+
+      GlobalState gs = Get.find<GlobalState>(); // Explicitly type Get.find()
+      ApiV1 _api = ApiV1(bearerToken: gs.token);
+      final response = await _api.getDashboard(
+        date_from: date_from,
+        date_to: date_to,
+      );
+
+      if (response['error'] == 0 && response['status'] == 200) {
+        if (mounted) {
+          setState(() {
+            _dashboardData = response['data'];
+            _isLoading = false;
+          });
+        }
+      } else {
+        throw Exception(response['message'] ?? 'Failed to load dashboard data');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading dashboard data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     GlobalState gs = Get.find();
     var user = gs.user;
-
-    String _totalRevenue = "RM 0.00";
-    String _nettSales = "RM 0.00";
-    String _totalCollections = "RM 0.00";
-    String _outstandingDebt = "RM 0.00";
-    String _inventoryValue = "RM 0.00";
-    String _invoicesIssued = "0";
-    String _receiptsIssued = "0";
-    String _newCustomers = "0";
-    String _pendingOrders = "0";
-    String _lowStockItems = "0";
 
     return Scaffold(
       drawer: AppDrawer(),
@@ -48,7 +104,6 @@ class _DashboardPageState extends State<DashboardPage> {
             fontSize: 30.0,
           ),
         ),
-
         actions: <Widget>[
           Container(
             margin: EdgeInsets.symmetric(horizontal: 8.0),
@@ -57,16 +112,14 @@ class _DashboardPageState extends State<DashboardPage> {
               selectedItem: gs.selectedBranch,
               onChanged: (v) {
                 gs.setSelectedBranch(v);
-                setState(() {});
+                _fetchDashboardData(); // Refresh data when branch changes
               },
               items: (filter, infiniteScrollProps) => Constant.branchList,
               dropdownBuilder: (context, selectedItem) {
                 return Center(
                   child: Text(
-                    selectedItem ?? "Select an item", // Handle null case
-                    style: TextStyle(
-                      fontSize: 16,
-                    ), // Optional: Customize text style
+                    selectedItem ?? "Select an item",
+                    style: TextStyle(fontSize: 16),
                   ),
                 );
               },
@@ -81,166 +134,125 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Container(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Welcome! ${user['username']}',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 21,
-                    fontWeight: FontWeight.bold,
+      body:
+          _isLoading
+              ? Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                onRefresh: _fetchDashboardData,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Container(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Welcome! ${user['username']}',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 21,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        DateRangeComponent(
+                          currentValue: _selectedRange,
+                          onDateRangeChanged: (v) {
+                            setState(() {
+                              _selectedRange = v;
+                            });
+                            _fetchDashboardData(); // Refresh data when date range changes
+                          },
+                        ),
+                        SizedBox(height: 10),
+                        Wrap(
+                          spacing: 16.0,
+                          runSpacing: 16.0,
+                          children: [
+                            _buildDashboardTile(
+                              title: 'Revenue',
+                              value:
+                                  _dashboardData['totalRevenue'] ?? 'RM 0.00',
+                              icon: FontAwesomeIcons.dollarSign,
+                              iconColor: Colors.white,
+                              iconBgColor: Colors.green,
+                            ),
+                            _buildDashboardTile(
+                              title: 'Nett Sales',
+                              value: _dashboardData['nettSales'] ?? 'RM 0.00',
+                              icon: FontAwesomeIcons.chartLine,
+                              iconColor: Colors.white,
+                              iconBgColor: Colors.lightGreen,
+                            ),
+                            _buildDashboardTile(
+                              title: 'Collections',
+                              value:
+                                  _dashboardData['totalCollections'] ??
+                                  'RM 0.00',
+                              icon: FontAwesomeIcons.handHoldingDollar,
+                              iconColor: Colors.white,
+                              iconBgColor: Colors.blue,
+                            ),
+                            // _buildDashboardTile(
+                            //   title: 'Outstanding',
+                            //   value:
+                            //       _dashboardData['outstandingDebt'] ??
+                            //       'RM 0.00',
+                            //   icon: FontAwesomeIcons.hourglassHalf,
+                            //   iconColor: Colors.white,
+                            //   iconBgColor: Colors.orange,
+                            // ),
+                            // _buildDashboardTile(
+                            //   title: 'Inventory Value',
+                            //   value:
+                            //       _dashboardData['inventoryValue'] ?? 'RM 0.00',
+                            //   icon: FontAwesomeIcons.boxesStacked,
+                            //   iconColor: Colors.white,
+                            //   iconBgColor: Colors.purple,
+                            // ),
+                            _buildDashboardTile(
+                              title: 'Invoices Issued',
+                              value: _dashboardData['invoicesIssued'] ?? '0',
+                              icon: FontAwesomeIcons.fileLines,
+                              iconColor: Colors.white,
+                              iconBgColor: Colors.cyan,
+                            ),
+                            _buildDashboardTile(
+                              title: 'Receipts Issued',
+                              value: _dashboardData['receiptsIssued'] ?? '0',
+                              icon: FontAwesomeIcons.receipt,
+                              iconColor: Colors.white,
+                              iconBgColor: Colors.pinkAccent,
+                            ),
+                            _buildDashboardTile(
+                              title: 'New Customers',
+                              value: _dashboardData['newCustomers'] ?? '0',
+                              icon: FontAwesomeIcons.userPlus,
+                              iconColor: Colors.white,
+                              iconBgColor: Colors.indigo,
+                            ),
+                            _buildDashboardTile(
+                              title: 'Pending Orders',
+                              value: _dashboardData['pendingOrders'] ?? '0',
+                              icon: FontAwesomeIcons.clockRotateLeft,
+                              iconColor: Colors.white,
+                              iconBgColor: Colors.brown,
+                            ),
+                            // _buildDashboardTile(
+                            //   title: 'Low Stock Items',
+                            //   value: _dashboardData['lowStockItems'] ?? '0',
+                            //   icon: FontAwesomeIcons.triangleExclamation,
+                            //   iconColor: Colors.white,
+                            //   iconBgColor: Colors.redAccent,
+                            // ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              // Text(_selectedRange.toString()),
-              DateRangeComponent(
-                onDateRangeChanged: (v) {
-                  setState(() {
-                    _selectedRange = v;
-                  });
-                },
-              ),
-              SizedBox(height: 10),
-
-              Wrap(
-                spacing: 16.0, // Increased spacing
-                runSpacing: 16.0, // Increased spacing
-                children: [
-                  // Existing Tiles
-                  _buildDashboardTile(
-                    title: 'Customers',
-                    value: '5000', // Replace with actual data
-                    icon: FontAwesomeIcons.userGroup,
-                    iconColor: Colors.white,
-                    iconBgColor: Colors.teal,
-                    onTap: () {
-                      /* Navigate to customer list page */
-                    },
-                  ),
-                  _buildDashboardTile(
-                    title: 'Orders',
-                    value: '1205', // Replace with actual data
-                    icon: FontAwesomeIcons.fileInvoiceDollar,
-                    iconColor: Colors.white,
-                    iconBgColor: Colors.amber,
-                    onTap: () {
-                      /* Navigate to order list page */
-                    },
-                  ),
-
-                  // New Tiles
-                  _buildDashboardTile(
-                    title: 'Revenue',
-                    value: _totalRevenue,
-                    icon: FontAwesomeIcons.dollarSign,
-                    iconColor: Colors.white,
-                    iconBgColor: Colors.green,
-                    onTap: () {
-                      /* Navigate to revenue report */
-                    },
-                  ),
-                  _buildDashboardTile(
-                    title: 'Nett Sales',
-                    value: _nettSales,
-                    icon: FontAwesomeIcons.chartLine,
-                    iconColor: Colors.white,
-                    iconBgColor: Colors.lightGreen,
-                    onTap: () {
-                      /* Navigate to sales report */
-                    },
-                  ),
-                  _buildDashboardTile(
-                    title: 'Collections',
-                    value: _totalCollections,
-                    icon: FontAwesomeIcons.handHoldingDollar,
-                    iconColor: Colors.white,
-                    iconBgColor: Colors.blue,
-                    onTap: () {
-                      /* Navigate to collections/receipt report */
-                    },
-                  ),
-                  _buildDashboardTile(
-                    title: 'Outstanding',
-                    value: _outstandingDebt,
-                    icon: FontAwesomeIcons.hourglassHalf,
-                    iconColor: Colors.white,
-                    iconBgColor: Colors.orange,
-                    onTap: () {
-                      /* Navigate to debt list page */
-                    },
-                  ),
-                  _buildDashboardTile(
-                    title: 'Inventory Value',
-                    value: _inventoryValue,
-                    icon: FontAwesomeIcons.boxesStacked,
-                    iconColor: Colors.white,
-                    iconBgColor: Colors.purple,
-                    onTap: () {
-                      /* Navigate to inventory value report */
-                    },
-                  ),
-                  _buildDashboardTile(
-                    title: 'Invoices Issued',
-                    value: _invoicesIssued,
-                    icon: FontAwesomeIcons.fileLines,
-                    iconColor: Colors.white,
-                    iconBgColor: Colors.cyan,
-                    onTap: () {
-                      /* Navigate to invoice list */
-                    },
-                  ),
-                  _buildDashboardTile(
-                    title: 'Receipts Issued',
-                    value: _receiptsIssued,
-                    icon: FontAwesomeIcons.receipt,
-                    iconColor: Colors.white,
-                    iconBgColor: Colors.pinkAccent,
-                    onTap: () {
-                      /* Navigate to receipt list */
-                    },
-                  ),
-                  _buildDashboardTile(
-                    title: 'New Customers',
-                    value: _newCustomers,
-                    icon: FontAwesomeIcons.userPlus,
-                    iconColor: Colors.white,
-                    iconBgColor: Colors.indigo,
-                    onTap: () {
-                      /* Navigate to new customer report */
-                    },
-                  ),
-                  _buildDashboardTile(
-                    title: 'Pending Orders',
-                    value: _pendingOrders,
-                    icon: FontAwesomeIcons.clockRotateLeft,
-                    iconColor: Colors.white,
-                    iconBgColor: Colors.brown,
-                    onTap: () {
-                      /* Navigate to pending orders list */
-                    },
-                  ),
-                  _buildDashboardTile(
-                    title: 'Low Stock Items',
-                    value: _lowStockItems,
-                    icon: FontAwesomeIcons.triangleExclamation,
-                    iconColor: Colors.white,
-                    iconBgColor: Colors.redAccent,
-                    onTap: () {
-                      /* Navigate to low stock report */
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 

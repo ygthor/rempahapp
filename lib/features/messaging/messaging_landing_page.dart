@@ -262,7 +262,7 @@ class _MessagingLandingPageState extends State<MessagingLandingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Messages'),
+        title: const Text('Messages (DEMO Only)'),
         // backgroundColor: Theme.of(context).primaryColor, // Example
       ),
       body: Column(

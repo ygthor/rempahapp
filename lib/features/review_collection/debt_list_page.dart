@@ -1,155 +1,84 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:rempahapp/models/CustomerDebt.dart';
-import 'package:rempahapp/models/debt_item.dart'; // For date formatting - add to pubspec.yaml
+import 'dart:async'; // For debounce
 
-// --- Mock Data (Replace with your actual data fetching) ---
-final List<CustomerDebt> _allCustomerDebts = [
-  CustomerDebt(
-    customerCode: '3000/S02',
-    outletsCode: '3000/S02',
-    companyName: 'AHS3185 S02 KANESAN',
-    debtItems: [
-      DebtItem(
-        salesNo: 'INV00123',
-        salesDate: DateTime(2024, 4, 1),
-        paymentType: 'Credit',
-        paymentTerm: '30 Days',
-        dueDate: DateTime(2024, 5, 1),
-        outstandingAmount: 150.75,
-      ),
-      DebtItem(
-        salesNo: 'INV00128',
-        salesDate: DateTime(2024, 4, 10),
-        paymentType: 'Credit',
-        paymentTerm: '30 Days',
-        dueDate: DateTime(2024, 5, 10),
-        outstandingAmount: 220.00,
-      ),
-      DebtItem(
-        salesNo: 'INV00135',
-        salesDate: DateTime(2024, 4, 20),
-        paymentType: 'Cash',
-        paymentTerm: 'COD',
-        dueDate: DateTime(2024, 4, 20),
-        outstandingAmount: 0.00,
-      ),
-      DebtItem(
-        salesNo: 'INV00140',
-        salesDate: DateTime(2024, 5, 1),
-        paymentType: 'Credit',
-        paymentTerm: '15 Days',
-        dueDate: DateTime(2024, 5, 16),
-        outstandingAmount: 300.50,
-      ),
-    ],
-  ),
-  CustomerDebt(
-    customerCode: 'CUST1001',
-    outletsCode: 'OUTLET005',
-    companyName: 'Beta Wholesale Sdn Bhd',
-    debtItems: [
-      DebtItem(
-        salesNo: 'INV00098',
-        salesDate: DateTime(2024, 3, 15),
-        paymentType: 'Credit',
-        paymentTerm: '60 Days',
-        dueDate: DateTime(2024, 5, 14),
-        outstandingAmount: 1250.00,
-      ),
-      DebtItem(
-        salesNo: 'INV00110',
-        salesDate: DateTime(2024, 4, 2),
-        paymentType: 'Credit',
-        paymentTerm: '30 Days',
-        dueDate: DateTime(2024, 5, 2),
-        outstandingAmount: 875.20,
-      ),
-    ],
-  ),
-  CustomerDebt(
-    customerCode: 'CUST2050',
-    outletsCode: 'STOREFRONT01',
-    companyName: 'Gamma Retail Enterprise',
-    debtItems: [
-      DebtItem(
-        salesNo: 'CSH00501',
-        salesDate: DateTime(2024, 5, 10),
-        paymentType: 'Cash',
-        paymentTerm: 'COD',
-        dueDate: DateTime(2024, 5, 10),
-        outstandingAmount: 0.00,
-      ),
-    ],
-  ),
-  CustomerDebt(
-    customerCode: '3000/S03',
-    outletsCode: '3000/S03',
-    companyName: 'KUMAR ENTERPRISE',
-    debtItems: [],
-  ),
-  CustomerDebt(
-    customerCode: '3000/S04',
-    outletsCode: '3000/S04',
-    companyName: 'RAJU STORE',
-    debtItems: [],
-  ),
-  CustomerDebt(
-    customerCode: 'CUST1002',
-    outletsCode: 'OUTLET006',
-    companyName: 'Charlie Retail',
-    debtItems: [],
-  ),
-  CustomerDebt(
-    customerCode: 'CUST1003',
-    outletsCode: 'OUTLET007',
-    companyName: 'Delta Goods',
-    debtItems: [],
-  ),
-  CustomerDebt(
-    customerCode: 'CUST1004',
-    outletsCode: 'OUTLET008',
-    companyName: 'Echo Supplies',
-    debtItems: [],
-  ),
-  CustomerDebt(
-    customerCode: 'CUST1005',
-    outletsCode: 'OUTLET009',
-    companyName: 'Foxtrot Mart',
-    debtItems: [],
-  ),
-  CustomerDebt(
-    customerCode: 'CUST1006',
-    outletsCode: 'OUTLET010',
-    companyName: 'Golf Trading',
-    debtItems: [],
-  ),
-  CustomerDebt(
-    customerCode: 'CUST1007',
-    outletsCode: 'OUTLET011',
-    companyName: 'Hotel Supplies Inc.',
-    debtItems: [],
-  ),
-  CustomerDebt(
-    customerCode: 'CUST1008',
-    outletsCode: 'OUTLET012',
-    companyName: 'India Grocers',
-    debtItems: [],
-  ),
-  CustomerDebt(
-    customerCode: 'CUST1009',
-    outletsCode: 'OUTLET013',
-    companyName: 'Juliet Provisions',
-    debtItems: [],
-  ),
-  CustomerDebt(
-    customerCode: 'CUST1010',
-    outletsCode: 'OUTLET014',
-    companyName: 'Kilo General Store',
-    debtItems: [],
-  ),
-];
+// Assuming models and services are in these paths
+import 'package:rempahapp/api/api_v1.dart';
+import 'package:rempahapp/models/global_state.dart';
+import 'package:rempahapp/shared/functions.dart';
+import 'package:get/get.dart';
+
+// --- Data Models (should be in separate files) ---
+
+class DebtItem {
+  final String salesNo;
+  final DateTime salesDate;
+  final String paymentType;
+  final String paymentTerm;
+  final DateTime dueDate;
+  final double outstandingAmount;
+  final String currency;
+
+  DebtItem({
+    required this.salesNo,
+    required this.salesDate,
+    required this.paymentType,
+    required this.paymentTerm,
+    required this.dueDate,
+    required this.outstandingAmount,
+    this.currency = 'RM',
+  });
+
+  factory DebtItem.fromJson(Map<String, dynamic> json) {
+    return DebtItem(
+      salesNo: json['salesNo'] as String? ?? 'N/A',
+      salesDate: DateTime.parse(json['salesDate'] as String),
+      paymentType: json['paymentType'] as String? ?? 'N/A',
+      paymentTerm: json['paymentTerm'] as String? ?? 'N/A',
+      dueDate: DateTime.parse(json['dueDate'] as String),
+      outstandingAmount: (json['outstandingAmount'] as num?)?.toDouble() ?? 0.0,
+      currency: json['currency'] as String? ?? 'RM',
+    );
+  }
+}
+
+class CustomerDebt {
+  final String customerCode;
+  final String outletsCode;
+  final String companyName;
+  final List<DebtItem> debtItems;
+  final double totalOutstandingAmount;
+
+  CustomerDebt({
+    required this.customerCode,
+    required this.outletsCode,
+    required this.companyName,
+    required this.debtItems,
+    required this.totalOutstandingAmount,
+  });
+
+  factory CustomerDebt.fromJson(Map<String, dynamic> json) {
+    var itemsFromJson = json['debtItems'] as List<dynamic>?;
+    List<DebtItem> parsedItems = [];
+    if (itemsFromJson != null) {
+      parsedItems =
+          itemsFromJson
+              .map((item) => DebtItem.fromJson(item as Map<String, dynamic>))
+              .toList();
+    }
+    return CustomerDebt(
+      customerCode: json['customerCode'] as String? ?? 'N/A',
+      outletsCode: json['outletsCode'] as String? ?? 'N/A',
+      companyName: json['companyName'] as String? ?? 'Unknown Customer',
+      debtItems: parsedItems,
+      totalOutstandingAmount:
+          (json['totalOutstandingAmount'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+// --- Debt List Page ---
 
 class DebtListPage extends StatefulWidget {
   const DebtListPage({super.key});
@@ -159,47 +88,95 @@ class DebtListPage extends StatefulWidget {
 }
 
 class _DebtListPageState extends State<DebtListPage> {
+  late ApiV1 _api;
   CustomerDebt? _selectedCustomerDebt;
   List<DebtItem> _filteredDebtItems = [];
-  String _currentSearchText =
-      ""; // To keep track of the text field's content for messages
+  bool _isLoading = false;
+  String _errorMessage = '';
+  final TextEditingController _autocompleteController = TextEditingController();
 
-  // No need for _customerCodeFilterController as Autocomplete's fieldViewBuilder provides one.
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
+    GlobalState gs = Get.find<GlobalState>();
+    _api = ApiV1(bearerToken: gs.token);
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
+    _autocompleteController.dispose();
     super.dispose();
   }
 
-  void _loadCustomerDebts(String customerCodeQuery) {
-    final query = customerCodeQuery.trim().toLowerCase();
-    setState(() {
-      _currentSearchText =
-          customerCodeQuery.trim(); // Update current search text
-      if (query.isEmpty) {
+  Future<void> _fetchAndLoadCustomerDebts(String searchTerm) async {
+    if (searchTerm.isEmpty) {
+      setState(() {
         _selectedCustomerDebt = null;
         _filteredDebtItems = [];
+        _errorMessage = '';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final response = await _api.getDebts(searchTerm: searchTerm);
+      aLog("Fetch on select/submit: $response");
+      if (response != null &&
+          response['error'] != true &&
+          response['data'] is List) {
+        final List<CustomerDebt> results =
+            (response['data'] as List)
+                .map(
+                  (data) => CustomerDebt.fromJson(data as Map<String, dynamic>),
+                )
+                .toList();
+
+        if (results.isNotEmpty) {
+          // Assuming the first result is the one we want for a specific search
+          final customerDebt = results.first;
+          setState(() {
+            _selectedCustomerDebt = customerDebt;
+            _filteredDebtItems =
+                customerDebt.debtItems
+                    .where((item) => item.outstandingAmount > 0)
+                    .toList();
+            _filteredDebtItems.sort((a, b) => a.dueDate.compareTo(b.dueDate));
+          });
+        } else {
+          setState(() {
+            _selectedCustomerDebt = null;
+            _filteredDebtItems = [];
+            _errorMessage = 'No customer found matching your search.';
+          });
+        }
       } else {
-        try {
-          _selectedCustomerDebt = _allCustomerDebts.firstWhere(
-            (custDebt) => custDebt.customerCode.toLowerCase() == query,
-          );
-          _filteredDebtItems =
-              _selectedCustomerDebt!.debtItems
-                  .where((item) => item.outstandingAmount > 0)
-                  .toList();
-          _filteredDebtItems.sort((a, b) => a.dueDate.compareTo(b.dueDate));
-        } catch (e) {
+        setState(() {
           _selectedCustomerDebt = null;
           _filteredDebtItems = [];
-        }
+          _errorMessage =
+              response?['message']?.toString() ??
+              'Failed to load debt information.';
+        });
       }
-    });
+    } catch (e) {
+      setState(() {
+        _selectedCustomerDebt = null;
+        _filteredDebtItems = [];
+        _errorMessage = 'An application error occurred.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _reviewAllSalesForCustomer() {
@@ -217,11 +194,9 @@ class _DebtListPageState extends State<DebtListPage> {
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please search and select a customer first.'),
-          backgroundColor: Colors.orange,
-        ),
+      showVDialog(
+        title: "Info",
+        text: "Please search and select a customer first.",
       );
     }
   }
@@ -229,23 +204,31 @@ class _DebtListPageState extends State<DebtListPage> {
   Future<Iterable<CustomerDebt>> _optionsBuilder(
     TextEditingValue textEditingValue,
   ) async {
-    setState(() {
-      // Update search text for UI messages as user types
-      _currentSearchText = textEditingValue.text.trim();
-    });
-    if (textEditingValue.text.isEmpty) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    if (textEditingValue.text.length < 2) {
       return const Iterable<CustomerDebt>.empty();
     }
-    return _allCustomerDebts
-        .where((CustomerDebt customer) {
-          return customer.customerCode.toLowerCase().startsWith(
-                textEditingValue.text.toLowerCase(),
-              ) ||
-              customer.companyName.toLowerCase().contains(
-                textEditingValue.text.toLowerCase(),
-              );
-        })
-        .take(10);
+
+    final completer = Completer<Iterable<CustomerDebt>>();
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      final response = await _api.getDebts(searchTerm: textEditingValue.text);
+
+      if (response != null &&
+          response['error'] != true &&
+          response['data'] is List) {
+        final List<CustomerDebt> results =
+            (response['data'] as List)
+                .map(
+                  (data) => CustomerDebt.fromJson(data as Map<String, dynamic>),
+                )
+                .toList();
+
+        completer.complete(results);
+      } else {
+        completer.complete(const Iterable<CustomerDebt>.empty());
+      }
+    });
+    return completer.future;
   }
 
   @override
@@ -265,19 +248,20 @@ class _DebtListPageState extends State<DebtListPage> {
                   (CustomerDebt option) =>
                       '${option.customerCode} - ${option.companyName}',
               fieldViewBuilder: (
-                BuildContext context,
-                TextEditingController
-                fieldTextEditingController, // Use this controller
-                FocusNode fieldFocusNode,
-                VoidCallback onFieldSubmitted,
+                context,
+                fieldTextEditingController,
+                fieldFocusNode,
+                onFieldSubmitted,
               ) {
+                // Keep a reference to the controller if needed outside this builder
+                // For this case, it's self-contained.
+
                 return TextField(
-                  controller:
-                      fieldTextEditingController, // THIS IS THE KEY CHANGE
+                  controller: fieldTextEditingController,
                   focusNode: fieldFocusNode,
                   decoration: InputDecoration(
                     labelText: 'Customer Code / Name',
-                    hintText: 'Type Customer Code or Name',
+                    hintText: 'Type to search for a customer...',
                     prefixIcon: const Icon(FontAwesomeIcons.magnifyingGlass),
                     border: const OutlineInputBorder(),
                     suffixIcon:
@@ -285,90 +269,45 @@ class _DebtListPageState extends State<DebtListPage> {
                             ? IconButton(
                               icon: const Icon(Icons.clear),
                               onPressed: () {
-                                fieldTextEditingController
-                                    .clear(); // Clear this controller
-                                _loadCustomerDebts(
+                                fieldTextEditingController.clear();
+                                _fetchAndLoadCustomerDebts(
                                   '',
-                                ); // Update the list based on empty query
-                                setState(() {
-                                  _currentSearchText = "";
-                                }); // Explicitly clear search text state
+                                ); // Clear the list
                               },
                             )
                             : null,
                   ),
                   onSubmitted: (String value) {
-                    // Value is fieldTextEditingController.text
-                    // If displayStringForOption includes name, value might be "code - name".
-                    // For simplicity, assume _loadCustomerDebts might need to handle this or user types code directly.
-                    // A more robust solution would be to search _allCustomerDebts for a match on `value` before calling _loadCustomerDebts.
-                    _loadCustomerDebts(
-                      value,
-                    ); // Attempt to load based on what's typed.
-                    // This might fail if 'value' is "CODE - NAME" and _loadCustomerDebts expects only CODE.
-                    // For this fix, we assume _loadCustomerDebts handles it or user types just code.
+                    // **THE FIX IS HERE**: Call the correct API fetch method
+                    _fetchAndLoadCustomerDebts(
+                      value.split(' - ')[0],
+                    ); // Try to get code if format is "CODE - NAME"
                     onFieldSubmitted();
                   },
                 );
               },
               onSelected: (CustomerDebt selection) {
-                // This is called when the user selects an option from the dropdown.
-                // Autocomplete sets the fieldTextEditingController's text to displayStringForOption by default.
-                // We want the field to show just the code after selection.
-                // So, get a reference to the controller used by fieldViewBuilder (which it doesn't directly give us back here)
-                // The best way is to set the text of the controller passed TO fieldViewBuilder
-                // However, fieldTextEditingController is local to fieldViewBuilder's scope.
-                // A common pattern is to update it in the next frame or rely on Autocomplete's behavior.
-                // For now, we'll ensure _loadCustomerDebts is called with the *actual code*.
-                // The text field might momentarily show "CODE - NAME" then update if we could set controller here.
-                // A cleaner way: have displayStringForOption return customerCode for direct use by Autocomplete setting text.
-                // OR, in fieldViewBuilder, if you had access to the TextEdC, you'd set it.
-
-                // Let's set fieldTextEditingController's text *after* selection.
-                // To do this, we need a way to access it. We can't directly from onSelected.
-                // So, the text field will display what displayStringForOption returns.
-                // We'll make _loadCustomerDebts robust or change displayStringForOption.
-
-                // Option A: Change displayStringForOption if field should only show code
-                // displayStringForOption: (CustomerDebt option) => option.customerCode,
-                // Then _loadCustomerDebts(selection.customerCode) is fine.
-
-                // Option B: (Current) displayStringForOption is "CODE - NAME"
-                // field will show "CODE - NAME".
-                // _loadCustomerDebts MUST be called with actual code.
-                _loadCustomerDebts(selection.customerCode);
-
-                // If you want the field to show only the code AFTER selection:
-                // This is tricky without direct access to fieldTextEditingController here.
-                // One way is to rebuild with initialValue, but Autocomplete doesn't have easy "set text" API.
-                // The simplest for now is that the field shows "CODE - NAME" (from displayStringForOption)
-                // and your logic uses `selection.customerCode`.
+                // When user selects from dropdown, update the list
+                _autocompleteController.text =
+                    '${selection.customerCode} - ${selection.companyName}';
+                _fetchAndLoadCustomerDebts(selection.customerCode);
                 FocusScope.of(context).unfocus();
               },
-              optionsViewBuilder: (
-                BuildContext context,
-                AutocompleteOnSelected<CustomerDebt> onSelected,
-                Iterable<CustomerDebt> options,
-              ) {
+              optionsViewBuilder: (context, onSelected, options) {
                 return Align(
                   alignment: Alignment.topLeft,
                   child: Material(
                     elevation: 4.0,
                     child: ConstrainedBox(
-                      // Use ConstrainedBox for better control over dropdown height
-                      constraints: const BoxConstraints(
-                        maxHeight: 250,
-                      ), // Max height for the suggestions
+                      constraints: const BoxConstraints(maxHeight: 250),
                       child: ListView.builder(
                         padding: EdgeInsets.zero,
-                        shrinkWrap: true, // Important for ConstrainedBox
+                        shrinkWrap: true,
                         itemCount: options.length,
-                        itemBuilder: (BuildContext context, int index) {
+                        itemBuilder: (context, index) {
                           final CustomerDebt option = options.elementAt(index);
                           return InkWell(
-                            onTap: () {
-                              onSelected(option);
-                            },
+                            onTap: () => onSelected(option),
                             child: ListTile(
                               title: Text(option.customerCode),
                               subtitle: Text(option.companyName),
@@ -382,9 +321,21 @@ class _DebtListPageState extends State<DebtListPage> {
               },
             ),
             const SizedBox(height: 16),
-
-            // Customer Details Section
-            if (_selectedCustomerDebt != null)
+            if (_isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (_errorMessage.isNotEmpty)
+              Center(
+                child: Text(
+                  _errorMessage,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              )
+            else if (_selectedCustomerDebt != null) ...[
               Card(
                 elevation: 2,
                 child: Padding(
@@ -405,9 +356,7 @@ class _DebtListPageState extends State<DebtListPage> {
                   ),
                 ),
               ),
-            const SizedBox(height: 10),
-
-            if (_selectedCustomerDebt != null)
+              const SizedBox(height: 10),
               Align(
                 alignment: Alignment.centerRight,
                 child: OutlinedButton.icon(
@@ -419,9 +368,8 @@ class _DebtListPageState extends State<DebtListPage> {
                   ),
                 ),
               ),
+            ],
             const SizedBox(height: 10),
-
-            // Debt Items Header (only if items exist)
             if (_filteredDebtItems.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -442,28 +390,20 @@ class _DebtListPageState extends State<DebtListPage> {
                 ),
               ),
             if (_filteredDebtItems.isNotEmpty) const Divider(),
-
-            // Debt Items List
             Expanded(
               child:
-                  (_selectedCustomerDebt == null &&
-                          _currentSearchText.isNotEmpty &&
-                          _filteredDebtItems.isEmpty)
-                      ? const Center(
-                        child: Text('No customer found matching your search.'),
-                      )
-                      : (_filteredDebtItems.isEmpty &&
-                          _selectedCustomerDebt != null)
+                  _selectedCustomerDebt != null &&
+                          _filteredDebtItems.isEmpty &&
+                          !_isLoading
                       ? const Center(
                         child: Text(
-                          'No outstanding debts for this customer, or no sales found.',
+                          'No outstanding debts found for this customer.',
                         ),
                       )
-                      : (_filteredDebtItems.isEmpty &&
-                          _currentSearchText.isEmpty)
+                      : _selectedCustomerDebt == null && !_isLoading
                       ? const Center(
                         child: Text(
-                          'Type customer code or name to view debts.',
+                          'Type and select a customer to view debts.',
                         ),
                       )
                       : ListView.separated(
@@ -476,7 +416,6 @@ class _DebtListPageState extends State<DebtListPage> {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 6.0),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 _itemText(
                                   item.salesNo,
@@ -520,8 +459,6 @@ class _DebtListPageState extends State<DebtListPage> {
                       ),
             ),
             const SizedBox(height: 10),
-
-            // Total Outstanding Amount
             if (_selectedCustomerDebt != null)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -535,7 +472,7 @@ class _DebtListPageState extends State<DebtListPage> {
                       ),
                     ),
                     Text(
-                      '${_selectedCustomerDebt!.totalOutstandingAmount.toStringAsFixed(2)} ${_selectedCustomerDebt!.debtItems.isNotEmpty ? _selectedCustomerDebt!.debtItems.first.currency : ''}',
+                      '${_selectedCustomerDebt!.totalOutstandingAmount.toStringAsFixed(2)}',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: Theme.of(context).primaryColor,
                         fontWeight: FontWeight.bold,
