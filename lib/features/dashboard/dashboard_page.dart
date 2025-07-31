@@ -56,10 +56,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
       GlobalState gs = Get.find<GlobalState>(); // Explicitly type Get.find()
       ApiV1 _api = ApiV1(bearerToken: gs.token);
-      final response = await _api.getDashboard(
-        date_from: date_from,
-        date_to: date_to,
-      );
+      final response = await _api.getDashboard(date_from: date_from, date_to: date_to);
 
       if (response['error'] == 0 && response['status'] == 200) {
         if (mounted) {
@@ -76,14 +73,27 @@ class _DashboardPageState extends State<DashboardPage> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading dashboard data: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading dashboard data: $e'), backgroundColor: Colors.red));
       }
     }
+  }
+
+  Future<bool> _onWillPop(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Exit App"),
+            content: const Text("Are you sure you want to exit the app?"),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("Cancel")),
+              ElevatedButton(onPressed: () => Navigator.of(context).pop(true), child: const Text("Exit")),
+            ],
+          ),
+    );
+    return result == true;
   }
 
   @override
@@ -91,168 +101,150 @@ class _DashboardPageState extends State<DashboardPage> {
     GlobalState gs = Get.find();
     var user = gs.user;
 
-    return Scaffold(
-      drawer: AppDrawer(),
-      appBar: AppBar(
-        elevation: 2.0,
-        backgroundColor: Colors.white,
-        title: Text(
-          'Dashboard',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w700,
-            fontSize: 30.0,
-          ),
-        ),
-        actions: <Widget>[
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 8.0),
-            width: 120,
-            child: DropdownSearch<String>(
-              selectedItem: gs.selectedBranch,
-              onChanged: (v) {
-                gs.setSelectedBranch(v);
-                _fetchDashboardData(); // Refresh data when branch changes
-              },
-              items: (filter, infiniteScrollProps) => Constant.branchList,
-              dropdownBuilder: (context, selectedItem) {
-                return Center(
-                  child: Text(
-                    selectedItem ?? "Select an item",
-                    style: TextStyle(fontSize: 16),
-                  ),
-                );
-              },
-              decoratorProps: DropDownDecoratorProps(
-                decoration: InputDecoration(
-                  border: UnderlineInputBorder(
-                    borderSide: BorderSide(width: 2.0, color: Colors.grey),
+    return WillPopScope(
+      onWillPop: () => _onWillPop(context),
+      child: Scaffold(
+        drawer: AppDrawer(),
+        appBar: AppBar(
+          elevation: 2.0,
+          backgroundColor: Colors.white,
+          title: Text('Dashboard', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 30.0)),
+          actions: <Widget>[
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 8.0),
+              width: 120,
+              child: DropdownSearch<String>(
+                selectedItem: gs.selectedBranch,
+                onChanged: (v) {
+                  gs.setSelectedBranch(v);
+                  _fetchDashboardData(); // Refresh data when branch changes
+                },
+                items: (filter, infiniteScrollProps) => Constant.branchList,
+                dropdownBuilder: (context, selectedItem) {
+                  return Center(child: Text(selectedItem ?? "Select an item", style: TextStyle(fontSize: 16)));
+                },
+                decoratorProps: DropDownDecoratorProps(
+                  decoration: InputDecoration(
+                    border: UnderlineInputBorder(borderSide: BorderSide(width: 2.0, color: Colors.grey)),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-      body:
-          _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                onRefresh: _fetchDashboardData,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Container(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Welcome! ${user['username']}',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold,
+          ],
+        ),
+        body:
+            _isLoading
+                ? Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                  onRefresh: _fetchDashboardData,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Welcome! ${user['username']}',
+                              style: TextStyle(color: Colors.black, fontSize: 21, fontWeight: FontWeight.bold),
                             ),
                           ),
-                        ),
-                        SizedBox(height: 20),
-                        DateRangeComponent(
-                          currentValue: _selectedRange,
-                          onDateRangeChanged: (v) {
-                            setState(() {
-                              _selectedRange = v;
-                            });
-                            _fetchDashboardData(); // Refresh data when date range changes
-                          },
-                        ),
-                        SizedBox(height: 10),
-                        Wrap(
-                          spacing: 16.0,
-                          runSpacing: 16.0,
-                          children: [
-                            _buildDashboardTile(
-                              title: 'Revenue',
-                              value:
-                                  _dashboardData['totalRevenue'] ?? 'RM 0.00',
-                              icon: FontAwesomeIcons.dollarSign,
-                              iconColor: Colors.white,
-                              iconBgColor: Colors.green,
-                            ),
-                            _buildDashboardTile(
-                              title: 'Nett Sales',
-                              value: _dashboardData['nettSales'] ?? 'RM 0.00',
-                              icon: FontAwesomeIcons.chartLine,
-                              iconColor: Colors.white,
-                              iconBgColor: Colors.lightGreen,
-                            ),
-                            _buildDashboardTile(
-                              title: 'Collections',
-                              value:
-                                  _dashboardData['totalCollections'] ??
-                                  'RM 0.00',
-                              icon: FontAwesomeIcons.handHoldingDollar,
-                              iconColor: Colors.white,
-                              iconBgColor: Colors.blue,
-                            ),
-                            // _buildDashboardTile(
-                            //   title: 'Outstanding',
-                            //   value:
-                            //       _dashboardData['outstandingDebt'] ??
-                            //       'RM 0.00',
-                            //   icon: FontAwesomeIcons.hourglassHalf,
-                            //   iconColor: Colors.white,
-                            //   iconBgColor: Colors.orange,
-                            // ),
-                            // _buildDashboardTile(
-                            //   title: 'Inventory Value',
-                            //   value:
-                            //       _dashboardData['inventoryValue'] ?? 'RM 0.00',
-                            //   icon: FontAwesomeIcons.boxesStacked,
-                            //   iconColor: Colors.white,
-                            //   iconBgColor: Colors.purple,
-                            // ),
-                            _buildDashboardTile(
-                              title: 'Invoices Issued',
-                              value: _dashboardData['invoicesIssued'] ?? '0',
-                              icon: FontAwesomeIcons.fileLines,
-                              iconColor: Colors.white,
-                              iconBgColor: Colors.cyan,
-                            ),
-                            _buildDashboardTile(
-                              title: 'Receipts Issued',
-                              value: _dashboardData['receiptsIssued'] ?? '0',
-                              icon: FontAwesomeIcons.receipt,
-                              iconColor: Colors.white,
-                              iconBgColor: Colors.pinkAccent,
-                            ),
-                            _buildDashboardTile(
-                              title: 'New Customers',
-                              value: _dashboardData['newCustomers'] ?? '0',
-                              icon: FontAwesomeIcons.userPlus,
-                              iconColor: Colors.white,
-                              iconBgColor: Colors.indigo,
-                            ),
-                            _buildDashboardTile(
-                              title: 'Pending Orders',
-                              value: _dashboardData['pendingOrders'] ?? '0',
-                              icon: FontAwesomeIcons.clockRotateLeft,
-                              iconColor: Colors.white,
-                              iconBgColor: Colors.brown,
-                            ),
-                            // _buildDashboardTile(
-                            //   title: 'Low Stock Items',
-                            //   value: _dashboardData['lowStockItems'] ?? '0',
-                            //   icon: FontAwesomeIcons.triangleExclamation,
-                            //   iconColor: Colors.white,
-                            //   iconBgColor: Colors.redAccent,
-                            // ),
-                          ],
-                        ),
-                      ],
+                          SizedBox(height: 20),
+                          DateRangeComponent(
+                            currentValue: _selectedRange,
+                            onDateRangeChanged: (v) {
+                              setState(() {
+                                _selectedRange = v;
+                              });
+                              _fetchDashboardData(); // Refresh data when date range changes
+                            },
+                          ),
+                          SizedBox(height: 10),
+                          Wrap(
+                            spacing: 16.0,
+                            runSpacing: 16.0,
+                            children: [
+                              _buildDashboardTile(
+                                title: 'Revenue',
+                                value: _dashboardData['totalRevenue'] ?? 'RM 0.00',
+                                icon: FontAwesomeIcons.dollarSign,
+                                iconColor: Colors.white,
+                                iconBgColor: Colors.green,
+                              ),
+                              _buildDashboardTile(
+                                title: 'Nett Sales',
+                                value: _dashboardData['nettSales'] ?? 'RM 0.00',
+                                icon: FontAwesomeIcons.chartLine,
+                                iconColor: Colors.white,
+                                iconBgColor: Colors.lightGreen,
+                              ),
+                              _buildDashboardTile(
+                                title: 'Collections',
+                                value: _dashboardData['totalCollections'] ?? 'RM 0.00',
+                                icon: FontAwesomeIcons.handHoldingDollar,
+                                iconColor: Colors.white,
+                                iconBgColor: Colors.blue,
+                              ),
+                              // _buildDashboardTile(
+                              //   title: 'Outstanding',
+                              //   value:
+                              //       _dashboardData['outstandingDebt'] ??
+                              //       'RM 0.00',
+                              //   icon: FontAwesomeIcons.hourglassHalf,
+                              //   iconColor: Colors.white,
+                              //   iconBgColor: Colors.orange,
+                              // ),
+                              // _buildDashboardTile(
+                              //   title: 'Inventory Value',
+                              //   value:
+                              //       _dashboardData['inventoryValue'] ?? 'RM 0.00',
+                              //   icon: FontAwesomeIcons.boxesStacked,
+                              //   iconColor: Colors.white,
+                              //   iconBgColor: Colors.purple,
+                              // ),
+                              _buildDashboardTile(
+                                title: 'Invoices Issued',
+                                value: _dashboardData['invoicesIssued'] ?? '0',
+                                icon: FontAwesomeIcons.fileLines,
+                                iconColor: Colors.white,
+                                iconBgColor: Colors.cyan,
+                              ),
+                              _buildDashboardTile(
+                                title: 'Receipts Issued',
+                                value: _dashboardData['receiptsIssued'] ?? '0',
+                                icon: FontAwesomeIcons.receipt,
+                                iconColor: Colors.white,
+                                iconBgColor: Colors.pinkAccent,
+                              ),
+                              _buildDashboardTile(
+                                title: 'New Customers',
+                                value: _dashboardData['newCustomers'] ?? '0',
+                                icon: FontAwesomeIcons.userPlus,
+                                iconColor: Colors.white,
+                                iconBgColor: Colors.indigo,
+                              ),
+                              _buildDashboardTile(
+                                title: 'Pending Orders',
+                                value: _dashboardData['pendingOrders'] ?? '0',
+                                icon: FontAwesomeIcons.clockRotateLeft,
+                                iconColor: Colors.white,
+                                iconBgColor: Colors.brown,
+                              ),
+                              // _buildDashboardTile(
+                              //   title: 'Low Stock Items',
+                              //   value: _dashboardData['lowStockItems'] ?? '0',
+                              //   icon: FontAwesomeIcons.triangleExclamation,
+                              //   iconColor: Colors.white,
+                              //   iconBgColor: Colors.redAccent,
+                              // ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+      ),
     );
   }
 
@@ -284,9 +276,7 @@ class _DashboardPageState extends State<DashboardPage> {
     VoidCallback? onTap,
   }) {
     return SizedBox(
-      width:
-          MediaQuery.of(context).size.width / 2 -
-          (16.0 + 8.0), // (padding + spacing/2)
+      width: MediaQuery.of(context).size.width / 2 - (16.0 + 8.0), // (padding + spacing/2)
       child: Material(
         elevation: 8.0, // Reduced elevation for a flatter look
         borderRadius: BorderRadius.circular(12.0),
@@ -298,17 +288,14 @@ class _DashboardPageState extends State<DashboardPage> {
             padding: const EdgeInsets.all(16.0), // Reduced padding
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween, // Ensure content is spaced
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Ensure content is spaced
               children: [
                 Material(
                   color: iconBgColor,
                   shape: CircleBorder(),
                   elevation: 2.0, // Slight elevation for the icon holder
                   child: Padding(
-                    padding: const EdgeInsets.all(
-                      12.0,
-                    ), // Reduced padding for icon
+                    padding: const EdgeInsets.all(12.0), // Reduced padding for icon
                     child: Icon(
                       icon,
                       color: iconColor,

@@ -36,8 +36,7 @@ class ApiV1 {
     Map<String, String>? stringQueryParameters;
     if (queryParameters != null) {
       stringQueryParameters = queryParameters.map(
-        (key, value) =>
-            MapEntry(key, value.toString()), // Ensure values are strings
+        (key, value) => MapEntry(key, value.toString()), // Ensure values are strings
       );
     }
 
@@ -54,19 +53,10 @@ class ApiV1 {
   Future<http.Response> _httpGet(Uri actionUrl) async {
     aLog("GET Request to: $actionUrl");
     aLog("Bearer Token: $bearerToken");
-    return http.get(
-      actionUrl,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $bearerToken',
-      },
-    );
+    return http.get(actionUrl, headers: {'Accept': 'application/json', 'Authorization': 'Bearer $bearerToken'});
   }
 
-  Future<http.Response> _httpPost(
-    Uri actionUrl, {
-    Map<String, dynamic>? body,
-  }) async {
+  Future<http.Response> _httpPost(Uri actionUrl, {Map<String, dynamic>? body}) async {
     aLog("POST Request to: $actionUrl");
     aLog("Body: ${json.encode(body)}");
     aLog("Bearer Token: $bearerToken");
@@ -81,10 +71,7 @@ class ApiV1 {
     );
   }
 
-  Future<http.Response> _httpPut(
-    Uri actionUrl, {
-    Map<String, dynamic>? body,
-  }) async {
+  Future<http.Response> _httpPut(Uri actionUrl, {Map<String, dynamic>? body}) async {
     aLog("PUT Request to: $actionUrl");
     aLog("Body: ${json.encode(body)}");
     aLog("Bearer Token: $bearerToken");
@@ -102,13 +89,7 @@ class ApiV1 {
   Future<http.Response> _httpDelete(Uri actionUrl) async {
     aLog("DELETE Request to: $actionUrl");
     aLog("Bearer Token: $bearerToken");
-    return http.delete(
-      actionUrl,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $bearerToken',
-      },
-    );
+    return http.delete(actionUrl, headers: {'Accept': 'application/json', 'Authorization': 'Bearer $bearerToken'});
   }
 
   // --- Authentication Methods (Existing) ---
@@ -137,10 +118,7 @@ class ApiV1 {
 
   logout({String? token, String? device_token}) async {
     Uri actionUrl = _parseUri('/api/v1/logout');
-    final response = await _httpPost(
-      actionUrl,
-      body: {"token": token, "device_token": device_token},
-    );
+    final response = await _httpPost(actionUrl, body: {"token": token, "device_token": device_token});
     return json.decode(response.body);
   }
 
@@ -152,11 +130,7 @@ class ApiV1 {
         title: 'Server Error ${response.statusCode}',
         text: 'Could not fetch user data. ${response.reasonPhrase}',
       );
-      return {
-        'error': true,
-        'message': response.body,
-        'statusCode': response.statusCode,
-      };
+      return {'error': true, 'message': response.body, 'statusCode': response.statusCode};
     }
     return json.decode(response.body);
   }
@@ -178,11 +152,7 @@ class ApiV1 {
         title: 'Server Error ${response.statusCode}',
         text: 'Could not fetch dashboard data. ${response.reasonPhrase}',
       );
-      return {
-        'error': true,
-        'message': response.body,
-        'statusCode': response.statusCode,
-      };
+      return {'error': true, 'message': response.body, 'statusCode': response.statusCode};
     }
     return json.decode(response.body);
   }
@@ -212,28 +182,19 @@ class ApiV1 {
       return null;
     } catch (e) {
       aLog("getCustomers Exception: $e");
-      showVDialog(
-        title: 'Network Error',
-        text: 'Could not connect to server: $e',
-      );
+      showVDialog(title: 'Network Error', text: 'Could not connect to server: $e');
       return {'error': true, 'message': e.toString()};
     }
   }
 
-  Future<Map<String, dynamic>?> createCustomer(
-    Map<String, dynamic> customerData,
-  ) async {
+  Future<Map<String, dynamic>?> createCustomer(Map<String, dynamic> customerData) async {
     Uri actionUrl = _parseUri('/api/customers');
     try {
       final response = await _httpPost(actionUrl, body: customerData);
       if (response.statusCode == 201 || response.statusCode == 200) {
         return json.decode(response.body);
       } else {
-        return {
-          'error': true,
-          'message': response.body,
-          'statusCode': response.statusCode,
-        };
+        return {'error': true, 'message': response.body, 'statusCode': response.statusCode};
       }
     } catch (e) {
       return {'error': true, 'message': e.toString()};
@@ -247,32 +208,21 @@ class ApiV1 {
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
-        return {
-          'error': true,
-          'message': response.body,
-          'statusCode': response.statusCode,
-        };
+        return {'error': true, 'message': response.body, 'statusCode': response.statusCode};
       }
     } catch (e) {
       return {'error': true, 'message': e.toString()};
     }
   }
 
-  Future<Map<String, dynamic>?> updateCustomer(
-    String customerId,
-    Map<String, dynamic> customerData,
-  ) async {
+  Future<Map<String, dynamic>?> updateCustomer(String customerId, Map<String, dynamic> customerData) async {
     Uri actionUrl = _parseUri('/api/customers/$customerId');
     try {
       final response = await _httpPut(actionUrl, body: customerData);
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
-        return {
-          'error': true,
-          'message': response.body,
-          'statusCode': response.statusCode,
-        };
+        return {'error': true, 'message': response.body, 'statusCode': response.statusCode};
       }
     } catch (e) {
       return {'error': true, 'message': e.toString()};
@@ -288,11 +238,7 @@ class ApiV1 {
             ? json.decode(response.body)
             : {'success': true, 'message': 'Customer deleted successfully.'};
       } else {
-        return {
-          'error': true,
-          'message': response.body,
-          'statusCode': response.statusCode,
-        };
+        return {'error': true, 'message': response.body, 'statusCode': response.statusCode};
       }
     } catch (e) {
       return {'error': true, 'message': e.toString()};
@@ -300,16 +246,10 @@ class ApiV1 {
   }
 
   // --- Order API Methods (Existing) ---
-  Future<Map<String, dynamic>?> getAllOrders({
-    int page = 1,
-    int perPage = 15,
-  }) async {
+  Future<Map<String, dynamic>?> getAllOrders({int page = 1, int perPage = 15}) async {
     Uri actionUrl = _parseUri(
       '/api/orders',
-      queryParameters: {
-        'page': page.toString(),
-        'per_page': perPage.toString(),
-      },
+      queryParameters: {'page': page.toString(), 'per_page': perPage.toString()},
     );
     try {
       final response = await _httpGet(actionUrl);
@@ -323,12 +263,20 @@ class ApiV1 {
     }
   }
 
-  Future<Map<String, dynamic>?> createOrder(
-    Map<String, dynamic> orderData,
-  ) async {
+  Future<Map<String, dynamic>?> createOrder(Map<String, dynamic> orderData) async {
     Uri actionUrl = _parseUri('/api/orders');
     try {
       final response = await _httpPost(actionUrl, body: orderData);
+      return response.body.isNotEmpty ? json.decode(response.body) : null;
+    } catch (e) {
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> updateOrder(Map<String, dynamic> orderData) async {
+    Uri actionUrl = _parseUri('/api/orders/' + orderData['id']);
+    try {
+      final response = await _httpPut(actionUrl, body: orderData);
       return response.body.isNotEmpty ? json.decode(response.body) : null;
     } catch (e) {
       return {'error': true, 'message': e.toString()};
@@ -350,10 +298,7 @@ class ApiV1 {
   Future<dynamic> getProducts() async {
     GlobalState gs = Get.find();
     String selectedBranch = gs.selectedBranch ?? '';
-    Uri actionUrl = _parseUri(
-      '/api/products',
-      queryParameters: {'branchId': selectedBranch},
-    );
+    Uri actionUrl = _parseUri('/api/products', queryParameters: {'branchId': selectedBranch});
     try {
       final response = await _httpGet(actionUrl);
       return response.body.isNotEmpty ? json.decode(response.body) : null;
@@ -362,9 +307,7 @@ class ApiV1 {
     }
   }
 
-  Future<Map<String, dynamic>?> createProduct(
-    Map<String, dynamic> productData,
-  ) async {
+  Future<Map<String, dynamic>?> createProduct(Map<String, dynamic> productData) async {
     Uri actionUrl = _parseUri('/api/products');
     try {
       final response = await _httpPost(actionUrl, body: productData);
@@ -384,48 +327,33 @@ class ApiV1 {
     String? dateFrom,
     String? dateTo,
   }) async {
-    Map<String, dynamic> queryParameters = {
-      'page': page.toString(),
-      'per_page': perPage.toString(),
-    };
+    Map<String, dynamic> queryParameters = {'page': page.toString(), 'per_page': perPage.toString()};
     if (customerId != null) queryParameters['customer_id'] = customerId;
     if (dateFrom != null) queryParameters['date_from'] = dateFrom;
     if (dateTo != null) queryParameters['date_to'] = dateTo;
 
-    Uri actionUrl = _parseUri(
-      '/api/receipts',
-      queryParameters: queryParameters,
-    );
+    Uri actionUrl = _parseUri('/api/receipts', queryParameters: queryParameters);
     try {
       final response = await _httpGet(actionUrl);
-      aLog(
-        "GetAllReceipts Response: ${response.statusCode} - ${response.body}",
-      );
+      aLog("GetAllReceipts Response: ${response.statusCode} - ${response.body}");
       if (response.body.isNotEmpty) {
         return json.decode(response.body) as Map<String, dynamic>;
       }
       return null;
     } catch (e) {
       aLog("GetAllReceipts Exception: $e");
-      showVDialog(
-        title: 'Network Error',
-        text: 'Could not connect to server for receipts: $e',
-      );
+      showVDialog(title: 'Network Error', text: 'Could not connect to server for receipts: $e');
       return {'error': true, 'message': e.toString()};
     }
   }
 
   /// Creates a new receipt.
-  Future<Map<String, dynamic>?> createReceipt(
-    Map<String, dynamic> receiptData,
-  ) async {
+  Future<Map<String, dynamic>?> createReceipt(Map<String, dynamic> receiptData) async {
     Uri actionUrl = _parseUri('/api/receipts');
     try {
       final response = await _httpPost(actionUrl, body: receiptData);
       aLog("CreateReceipt Response: ${response.statusCode} - ${response.body}");
-      return response.body.isNotEmpty
-          ? json.decode(response.body) as Map<String, dynamic>
-          : null;
+      return response.body.isNotEmpty ? json.decode(response.body) as Map<String, dynamic> : null;
     } catch (e) {
       aLog("CreateReceipt Exception: $e");
       showVDialog(title: 'Network Error', text: 'Could not create receipt: $e');
@@ -434,17 +362,12 @@ class ApiV1 {
   }
 
   /// Updates an existing receipt.
-  Future<Map<String, dynamic>?> updateReceipt(
-    int receiptId,
-    Map<String, dynamic> receiptData,
-  ) async {
+  Future<Map<String, dynamic>?> updateReceipt(int receiptId, Map<String, dynamic> receiptData) async {
     Uri actionUrl = _parseUri('/api/receipts/$receiptId');
     try {
       final response = await _httpPut(actionUrl, body: receiptData);
       aLog("UpdateReceipt Response: ${response.statusCode} - ${response.body}");
-      return response.body.isNotEmpty
-          ? json.decode(response.body) as Map<String, dynamic>
-          : null;
+      return response.body.isNotEmpty ? json.decode(response.body) as Map<String, dynamic> : null;
     } catch (e) {
       aLog("UpdateReceipt Exception: $e");
       showVDialog(title: 'Network Error', text: 'Could not update receipt: $e');
@@ -463,11 +386,7 @@ class ApiV1 {
             ? json.decode(response.body)
             : {'success': true, 'message': 'Receipt deleted successfully.'};
       } else {
-        return {
-          'error': true,
-          'message': response.body,
-          'statusCode': response.statusCode,
-        };
+        return {'error': true, 'message': response.body, 'statusCode': response.statusCode};
       }
     } catch (e) {
       aLog("DeleteReceipt Exception: $e");
@@ -492,29 +411,19 @@ class ApiV1 {
       return null;
     } catch (e) {
       aLog("GetDebts Exception: $e");
-      showVDialog(
-        title: 'Network Error',
-        text: 'Could not fetch debt information: $e',
-      );
+      showVDialog(title: 'Network Error', text: 'Could not fetch debt information: $e');
       return {'error': true, 'message': e.toString()};
     }
   }
 
-  Future<Map<String, dynamic>?> getInventory({
-    String? groupId,
-    String? subGroupId,
-    String? inventoryType,
-  }) async {
+  Future<Map<String, dynamic>?> getInventory({String? groupId, String? subGroupId, String? inventoryType}) async {
     Map<String, dynamic> queryParameters = {
       'groupId': groupId,
       'subGroupId': subGroupId,
       'inventoryType': inventoryType,
     };
 
-    Uri actionUrl = _parseUri(
-      '/api/inventory',
-      queryParameters: queryParameters,
-    );
+    Uri actionUrl = _parseUri('/api/inventory', queryParameters: queryParameters);
     try {
       final response = await _httpGet(actionUrl);
       aLog("GetInventory Response: ${response.statusCode} - ${response.body}");
@@ -524,10 +433,38 @@ class ApiV1 {
       return null;
     } catch (e) {
       aLog("GetInventory Exception: $e");
-      showVDialog(
-        title: 'Network Error',
-        text: 'Could not fetch inventory: $e',
-      );
+      showVDialog(title: 'Network Error', text: 'Could not fetch inventory: $e');
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> createOrderItem(Map<String, dynamic> orderData) async {
+    Uri actionUrl = _parseUri('/api/orders-items');
+    try {
+      final response = await _httpPost(actionUrl, body: orderData);
+      return response.body.isNotEmpty ? json.decode(response.body) : null;
+    } catch (e) {
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  // ... (other order methods remain the same) ...
+  Future<Map<String, dynamic>?> getOrderItemById(String orderId) async {
+    Uri actionUrl = _parseUri('/api/orders/$orderId');
+    try {
+      final response = await _httpGet(actionUrl);
+      return response.body.isNotEmpty ? json.decode(response.body) : null;
+    } catch (e) {
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> deleteOrderItem(String orderItemId) async {
+    Uri actionUrl = _parseUri('/api/orders-items/$orderItemId');
+    try {
+      final response = await _httpDelete(actionUrl);
+      return response.body.isNotEmpty ? json.decode(response.body) : null;
+    } catch (e) {
       return {'error': true, 'message': e.toString()};
     }
   }

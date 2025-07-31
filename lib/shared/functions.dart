@@ -55,14 +55,9 @@ showVDialog({title = "Alert", text = "", type = "", onConfirm}) async {
     actionButton = Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        TextButton(
-          onPressed: Get.back,
-          child: Text('Cancel', style: TextStyle(color: Colors.red)),
-        ),
+        TextButton(onPressed: Get.back, child: Text('Cancel', style: TextStyle(color: Colors.red))),
         ElevatedButton(
-          style: ButtonStyle(
-            backgroundColor: WidgetStateProperty.all(Colors.red),
-          ),
+          style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Colors.red)),
           onPressed: onConfirm,
           child: Text('Yes', style: TextStyle(color: Colors.white)),
         ),
@@ -70,10 +65,7 @@ showVDialog({title = "Alert", text = "", type = "", onConfirm}) async {
     );
   } else {
     actionButton = Center(
-      child: TextButton(
-        onPressed: Get.back,
-        child: Text('Close', style: TextStyle(color: Colors.red)),
-      ),
+      child: TextButton(onPressed: Get.back, child: Text('Close', style: TextStyle(color: Colors.red))),
     );
   }
 
@@ -100,10 +92,7 @@ showVDialog({title = "Alert", text = "", type = "", onConfirm}) async {
           FaIcon(icon, size: 50.0, color: iconColor),
           Padding(
             padding: const EdgeInsets.only(top: 20, bottom: 20),
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Text(text, style: TextStyle(height: 1.5)),
-            ),
+            child: Align(alignment: Alignment.topLeft, child: Text(text, style: TextStyle(height: 1.5))),
           ),
           actionButton,
         ],
@@ -126,12 +115,7 @@ showLoading({text = 'Loading ...', dismissable = true}) {
     //titleStyle: const TextStyle(color: Colors.black),
     middleTextStyle: const TextStyle(color: Colors.white),
     // barrierDismissible: false,
-    content: Column(
-      children: [
-        const SpinKitThreeInOut(color: Colors.red, size: 25),
-        Text(text),
-      ],
-    ),
+    content: Column(children: [const SpinKitThreeInOut(color: Colors.red, size: 25), Text(text)]),
   );
 }
 
@@ -146,14 +130,10 @@ Future<bool> appNeedUpdate({context}) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   DateTime? datetime_stop_version_alert_until;
-  String? stop_version_alert_until = prefs.getString(
-    'stop_version_alert_until',
-  );
+  String? stop_version_alert_until = prefs.getString('stop_version_alert_until');
   if (stop_version_alert_until != null) {
     debugPrint("STOP ALERT UNTIL: $datetime_stop_version_alert_until");
-    datetime_stop_version_alert_until = DateTime.parse(
-      stop_version_alert_until,
-    );
+    datetime_stop_version_alert_until = DateTime.parse(stop_version_alert_until);
   }
   DateTime now = DateTime.now();
   final versionChecker = VersionChecker(managed: false);
@@ -166,19 +146,14 @@ showVersionUpdateAlert({context}) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   DateTime? datetime_stop_version_alert_until;
-  String? stop_version_alert_until = prefs.getString(
-    'stop_version_alert_until',
-  );
+  String? stop_version_alert_until = prefs.getString('stop_version_alert_until');
   if (stop_version_alert_until != null) {
     debugPrint("STOP ALERT UNTIL: $datetime_stop_version_alert_until");
-    datetime_stop_version_alert_until = DateTime.parse(
-      stop_version_alert_until,
-    );
+    datetime_stop_version_alert_until = DateTime.parse(stop_version_alert_until);
   }
   DateTime now = DateTime.now();
 
-  if (datetime_stop_version_alert_until != null &&
-      datetime_stop_version_alert_until.compareTo(now) > 0) {
+  if (datetime_stop_version_alert_until != null && datetime_stop_version_alert_until.compareTo(now) > 0) {
     // return;
   }
 
@@ -199,18 +174,12 @@ showVersionUpdateAlert({context}) async {
           child: const Text('Later', style: TextStyle(color: Colors.red)),
           onPressed: () async {
             DateTime stop_until = now.add(const Duration(days: 1));
-            await prefs.setString(
-              'stop_version_alert_until',
-              stop_until.toString(),
-            );
+            await prefs.setString('stop_version_alert_until', stop_until.toString());
             Navigator.of(context).pop();
           },
         ),
         TextButton(
-          child: const Text(
-            'App Gallery (Huawei)',
-            style: TextStyle(color: Colors.blue),
-          ),
+          child: const Text('App Gallery (Huawei)', style: TextStyle(color: Colors.blue)),
           onPressed: () async {
             var url = Constant.HUAWEI_APP_URL; //HUAWEI STORE URL FOR WAW
             var uri = Uri.parse(url);
@@ -220,10 +189,7 @@ showVersionUpdateAlert({context}) async {
           },
         ),
         TextButton(
-          child: const Text(
-            'Play Store (Google Android)',
-            style: TextStyle(color: Colors.blue),
-          ),
+          child: const Text('Play Store (Google Android)', style: TextStyle(color: Colors.blue)),
           onPressed: () async {
             var url = appStoreLink;
             var uri = Uri.parse(url);
@@ -281,16 +247,11 @@ laterVersionUpdateAlert() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   DateTime now = DateTime.now();
   DateTime stop_version_alert_until = now.add(const Duration(hours: 8));
-  await prefs.setString(
-    'stop_version_alert_until',
-    stop_version_alert_until.toString(),
-  );
+  await prefs.setString('stop_version_alert_until', stop_version_alert_until.toString());
 }
 
 Widget futureLoading() {
-  return const Center(
-    child: CircularProgressIndicator(color: AppColors.blueDress),
-  );
+  return const Center(child: CircularProgressIndicator(color: AppColors.blueDress));
 }
 
 Widget shimmerLoading({type = "full_page"}) {
@@ -360,8 +321,7 @@ ImageProvider getImageProviderByBase64(String empName, String? image64) {
     if (empName == 'admin') {
       empName = 'admin1';
     }
-    networkImageUrl =
-        "https://ui-avatars.com/api/?name=$empName&color=7F9CF5&background=EBF4FF";
+    networkImageUrl = "https://ui-avatars.com/api/?name=$empName&color=7F9CF5&background=EBF4FF";
     return NetworkImage(networkImageUrl);
   } else {
     return const AssetImage('assets/images/no_product.jpg');
@@ -452,4 +412,44 @@ double? parseDoubleFromStringOrNum(dynamic value) {
   if (value is String) return double.tryParse(value);
   if (value is num) return value.toDouble();
   return null;
+}
+
+DateTime? parseDateFromString(String input, {String format = 'yyyy-MM-dd'}) {
+  try {
+    if (input.trim().isEmpty) return null;
+
+    // Try custom format first
+    final formatter = DateFormat(format);
+    return formatter.parseStrict(input.trim());
+  } catch (e) {
+    // Fallback: try default DateTime.parse for ISO formats
+    try {
+      return DateTime.parse(input.trim());
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+Future<bool> showConfirmationDialog({
+  required BuildContext context,
+  String title = "Confirm",
+  String content = "Are you sure?",
+  String cancelText = "Cancel",
+  String confirmText = "Yes",
+}) async {
+  final result = await showDialog<bool>(
+    context: context,
+    builder:
+        (context) => AlertDialog(
+          title: Text(title),
+          content: Text(content),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(cancelText)),
+            ElevatedButton(onPressed: () => Navigator.of(context).pop(true), child: Text(confirmText)),
+          ],
+        ),
+  );
+
+  return result == true;
 }

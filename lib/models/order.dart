@@ -1,80 +1,104 @@
-import 'package:rempahapp/models/order_item.dart';
 import 'package:intl/intl.dart';
-import 'package:rempahapp/shared/functions.dart'; // For date parsing/formatting if needed, though not directly used in fromJson/toJson here
+import 'package:rempahapp/models/order_item.dart';
+import 'package:rempahapp/shared/functions.dart'; // for parseDoubleFromStringOrNum
 
 class Order {
-  final String? id; // Server-assigned order ID
-  final String
-  customerId; // This is the string ID like "AHS3185" from your form
-  final String customerName;
-  final List<OrderItem> items;
-  final DateTime orderDate;
-  final String status; // e.g., 'pending', 'processing', 'completed'
-  final double? totalAmountFromApi; // If API calculates and returns total
-  final String? remarks; // Added from Laravel model
+  final String? id;
+  final String? referenceNo;
+  final String? branchId;
+  final String? customerId;
+  final String? customerCode;
+  final String? customerName;
+  final DateTime? orderDate;
+  final String? status;
+  final String? description;
+  final double? grossAmount;
+  final double? tax1;
+  final double? tax1Percentage;
+  final double? grandAmount;
+  final double? discount;
+  final double? netAmount;
+  final String? remarks;
+  final int? createdBy;
+  final int? updatedBy;
+  final List<OrderItem>? items;
 
   Order({
     this.id,
-    required this.customerId,
-    required this.customerName,
-    required this.items,
-    required this.orderDate,
-    this.status = 'pending', // Default status
-    this.totalAmountFromApi,
+    this.referenceNo,
+    this.branchId,
+    this.customerId,
+    this.customerCode,
+    this.customerName,
+    this.orderDate,
+    this.status,
+    this.description,
+    this.grossAmount,
+    this.tax1,
+    this.tax1Percentage,
+    this.grandAmount,
+    this.discount,
+    this.netAmount,
     this.remarks,
+    this.createdBy,
+    this.updatedBy,
+    this.items,
   });
 
-  // Calculated total amount on the client-side
   double get calculatedTotalAmount {
-    return items.fold(0.0, (sum, item) => sum + item.amount);
+    return (items ?? []).fold(0.0, (sum, item) => sum + (item.amount ?? 0.0));
   }
 
-  // For sending to API (when creating a new order)
   Map<String, dynamic> toJson() {
     return {
-      // 'id': id, // Usually not sent when creating, server assigns it
-      'customer_id': customerId, // Send the string ID from Flutter form
-      'customer_name': customerName,
-      'order_date': DateFormat(
-        "yyyy-MM-dd HH:mm:ss",
-      ).format(orderDate), // Format for API
-      'status': status,
-      'remarks': remarks,
-      // 'total_amount': calculatedTotalAmount, // API calculates this on the backend
-      'items': items.map((item) => item.toJson()).toList(),
+      if (id != null) 'id': id,
+      if (referenceNo != null) 'reference_no': referenceNo,
+      if (branchId != null) 'branch_id': branchId,
+      if (customerId != null) 'customer_id': customerId,
+      if (customerCode != null) 'customer_code': customerCode,
+      if (customerName != null) 'customer_name': customerName,
+      if (orderDate != null) 'order_date': DateFormat("yyyy-MM-dd").format(orderDate!),
+      if (status != null) 'status': status,
+      if (description != null) 'description': description,
+      if (grossAmount != null) 'gross_amount': grossAmount,
+      if (tax1 != null) 'tax1': tax1,
+      if (tax1Percentage != null) 'tax1_percentage': tax1Percentage,
+      if (grandAmount != null) 'grand_amount': grandAmount,
+      if (discount != null) 'discount': discount,
+      if (netAmount != null) 'net_amount': netAmount,
+      if (remarks != null) 'remarks': remarks,
+      if (createdBy != null) 'created_by': createdBy,
+      if (updatedBy != null) 'updated_by': updatedBy,
+      if (items != null) 'items': items!.map((item) => item.toJson()).toList(),
     };
   }
 
-  // For creating from API response
   factory Order.fromJson(Map<String, dynamic> json) {
     var itemsFromJson = json['items'] as List<dynamic>?;
-    List<OrderItem> parsedItems = [];
-    if (itemsFromJson != null) {
-      parsedItems =
-          itemsFromJson
-              .map(
-                (itemJson) =>
-                    OrderItem.fromJson(itemJson as Map<String, dynamic>),
-              )
-              .toList();
-    }
 
     return Order(
       id: json['id']?.toString(),
-      // Assuming API returns customer_id as the same string identifier used by Flutter
-      // If API returns an integer foreign key for customer, this needs adjustment
-      customerId: json['customer_id']?.toString() ?? 'unknown_cust_id',
-      customerName: json['customer_name'] as String? ?? 'Unknown Customer',
-      items: parsedItems,
-      orderDate:
-          json['order_date'] != null
-              ? DateTime.parse(json['order_date'] as String)
-              : DateTime.now(),
-      status: json['status'] as String? ?? 'Pending',
-      totalAmountFromApi: parseDoubleFromStringOrNum(
-        json['total_amount'],
-      ), // Corrected parsing
+      referenceNo: json['reference_no'] as String?,
+      branchId: json['branch_id'] as String?,
+      customerId: json['customer_id']?.toString(),
+      customerCode: json['customer_code'] as String?,
+      customerName: json['customer_name'] as String?,
+      orderDate: json['order_date'] != null ? DateTime.tryParse(json['order_date']) : null,
+      status: json['status'] as String?,
+      description: json['description'] as String?,
+      grossAmount: parseDoubleFromStringOrNum(json['gross_amount']),
+      tax1: parseDoubleFromStringOrNum(json['tax1']),
+      tax1Percentage: parseDoubleFromStringOrNum(json['tax1_percentage']),
+      grandAmount: parseDoubleFromStringOrNum(json['grand_amount']),
+      discount: parseDoubleFromStringOrNum(json['discount']),
+      netAmount: parseDoubleFromStringOrNum(json['net_amount']),
       remarks: json['remarks'] as String?,
+      createdBy: json['created_by'] as int?,
+      updatedBy: json['updated_by'] as int?,
+      items:
+          itemsFromJson != null
+              ? itemsFromJson.map((item) => OrderItem.fromJson(item as Map<String, dynamic>)).toList()
+              : null,
     );
   }
 }

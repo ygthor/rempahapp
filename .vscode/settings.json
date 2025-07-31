@@ -3,5 +3,10 @@
         "activityBar.background": "#500E55",
         "titleBar.activeBackground": "#701478",
         "titleBar.activeForeground": "#FEFCFE"
-    }
+    },
+    "[dart]": {
+        "editor.rulers": [120],
+        "editor.formatOnSave": true
+    },
+    "dart.lineLength": 120
 }

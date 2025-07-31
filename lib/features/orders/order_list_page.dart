@@ -171,7 +171,7 @@ class _OrderListPageState extends State<OrderListPage> {
             }
             _orders.addAll(newOrders);
             // Sorting might be better done by API if dataset is large
-            _orders.sort((a, b) => b.orderDate.compareTo(a.orderDate));
+            // _orders.sort((a, b) => b.orderDate.compareTo(a.orderDate));
 
             // Update pagination state from the paginationWrapper
             _currentPage =
@@ -365,7 +365,7 @@ class _OrderListPageState extends State<OrderListPage> {
                                     ),
                                     decoration: BoxDecoration(
                                       color: _getStatusColor(
-                                        order.status,
+                                        order.status ?? '',
                                       ).withOpacity(0.15),
                                       borderRadius: BorderRadius.circular(20.0),
                                     ),
@@ -373,16 +373,18 @@ class _OrderListPageState extends State<OrderListPage> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          _getStatusIcon(order.status),
+                                          _getStatusIcon(order.status ?? ''),
                                           size: 14,
-                                          color: _getStatusColor(order.status),
+                                          color: _getStatusColor(
+                                            order.status ?? '',
+                                          ),
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          order.status,
+                                          order.status ?? '',
                                           style: TextStyle(
                                             color: _getStatusColor(
-                                              order.status,
+                                              order.status ?? '',
                                             ),
                                             fontWeight: FontWeight.w600,
                                             fontSize: 12,
@@ -395,7 +397,7 @@ class _OrderListPageState extends State<OrderListPage> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                order.customerName,
+                                order.customerName ?? '',
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
@@ -411,9 +413,10 @@ class _OrderListPageState extends State<OrderListPage> {
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    DateFormat(
-                                      'dd MMM yy, hh:mm a',
-                                    ).format(order.orderDate),
+                                    'order.orderDate',
+                                    // DateFormat(
+                                    //   'dd MMM yy, hh:mm a',
+                                    // ).format(order.orderDate),
                                     style: const TextStyle(
                                       fontSize: 13,
                                       color: Colors.grey,
