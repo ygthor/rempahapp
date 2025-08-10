@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:rempahapp/features/invoices/invoice_form_page.dart';
 
 // CHANGED: Import the new Invoice model
 import 'package:rempahapp/models/invoice.dart';
@@ -158,23 +159,23 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
 
   // CHANGED: Updated navigation logic
   Future<void> _navigateToCreateInvoicePage() async {
-    // final result = await Get.to(() => InvoiceFormPage()); // Assumes InvoiceFormPage exists
-    // if (result == true) {
-    //   _handleRefresh();
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text('New invoice action complete! List refreshed.'), backgroundColor: Colors.green),
-    //   );
-    // }
-    showVDialog(title: "TODO", text: "Navigate to Invoice Form Page");
+    final result = await Get.to(() => InvoiceFormPage()); // Assumes InvoiceFormPage exists
+    if (result == true) {
+      _handleRefresh();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('New invoice action complete! List refreshed.'), backgroundColor: Colors.green),
+      );
+    }
+    // showVDialog(title: "TODO", text: "Navigate to Invoice Form Page");
   }
 
   // CHANGED: Updated navigation logic
   Future<void> _navigateToInvoiceDetailPage(Invoice invoice) async {
-    // final result = await Get.to(() => InvoiceFormPage(invoice: invoice)); // Assumes InvoiceFormPage exists
-    // if (result == true) {
-    //   _handleRefresh();
-    // }
-    showVDialog(title: "TODO", text: "Navigate to Invoice Form Page for invoice: ${invoice.refNo}");
+    final result = await Get.to(() => InvoiceFormPage(invoice: invoice)); // Assumes InvoiceFormPage exists
+    if (result == true) {
+      _handleRefresh();
+    }
+    // showVDialog(title: "TODO", text: "Navigate to Invoice Form Page for invoice: ${invoice.refNo}");
   }
 
   // These helper methods for color and icon can remain the same

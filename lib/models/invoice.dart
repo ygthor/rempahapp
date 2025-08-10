@@ -13,6 +13,7 @@ class Invoice {
   final double grandBil;
   final double grossBill;
   final String? status;
+  final String? note;
   final List<ArTransItem> items;
 
   Invoice({
@@ -26,6 +27,7 @@ class Invoice {
     required this.grandBil,
     required this.grossBill,
     this.status,
+    this.note,
     this.items = const [],
   });
 
@@ -57,7 +59,8 @@ class Invoice {
       netBil: parseDoubleSafe(json['NET_BIL']),
       grandBil: parseDoubleSafe(json['GRAND_BIL']),
       grossBill: parseDoubleSafe(json['GROSS_BILL']),
-      status: json['status'] as String? ?? 'completed', // Default status
+      status: json['status'] as String? ?? 'pending', // Default status
+      note: json['NOTE'] as String?, // Default status
       items: parseItems(json['items']),
     );
   }
