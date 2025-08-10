@@ -246,75 +246,6 @@ class ApiV1 {
     }
   }
 
-  // --- Order API Methods (Existing) ---
-  Future<Map<String, dynamic>?> getAllOrders({
-    int page = 1,
-    int perPage = 15,
-    String? customerName, // New parameter
-    DateTime? startDate, // New parameter
-    DateTime? endDate, // New parameter
-    List<String>? orderTypes, // New parameter
-  }) async {
-    // Build the query parameters map
-    final Map<String, dynamic> queryParams = {'page': page.toString(), 'per_page': perPage.toString()};
-    if (customerName != null && customerName.isNotEmpty) {
-      queryParams['customer_name'] = customerName;
-    }
-    if (startDate != null) {
-      queryParams['start_date'] = DateFormat('yyyy-MM-dd').format(startDate);
-    }
-    if (endDate != null) {
-      queryParams['end_date'] = DateFormat('yyyy-MM-dd').format(endDate);
-    }
-    if (orderTypes != null && orderTypes.isNotEmpty) {
-      queryParams['order_type'] = orderTypes.join(','); // Or however your API expects a list
-    }
-
-    Uri actionUrl = _parseUri('/api/orders', queryParameters: queryParams);
-
-    try {
-      final response = await _httpGet(actionUrl);
-      if (response.body.isNotEmpty) {
-        // ... (existing parsing logic)
-        return json.decode(response.body) as Map<String, dynamic>;
-      }
-      return null;
-    } catch (e) {
-      return {'error': true, 'message': e.toString()};
-    }
-  }
-
-  Future<Map<String, dynamic>?> createOrder(Map<String, dynamic> orderData) async {
-    Uri actionUrl = _parseUri('/api/orders');
-    try {
-      final response = await _httpPost(actionUrl, body: orderData);
-      return response.body.isNotEmpty ? json.decode(response.body) : null;
-    } catch (e) {
-      return {'error': true, 'message': e.toString()};
-    }
-  }
-
-  Future<Map<String, dynamic>?> updateOrder(Map<String, dynamic> orderData) async {
-    Uri actionUrl = _parseUri('/api/orders/' + orderData['id']);
-    try {
-      final response = await _httpPut(actionUrl, body: orderData);
-      return response.body.isNotEmpty ? json.decode(response.body) : null;
-    } catch (e) {
-      return {'error': true, 'message': e.toString()};
-    }
-  }
-
-  // ... (other order methods remain the same) ...
-  Future<Map<String, dynamic>?> getOrderById(String orderId) async {
-    Uri actionUrl = _parseUri('/api/orders/$orderId');
-    try {
-      final response = await _httpGet(actionUrl);
-      return response.body.isNotEmpty ? json.decode(response.body) : null;
-    } catch (e) {
-      return {'error': true, 'message': e.toString()};
-    }
-  }
-
   // --- Product API Methods (Existing) ---
   Future<dynamic> getProducts() async {
     GlobalState gs = Get.find();
@@ -459,6 +390,75 @@ class ApiV1 {
     }
   }
 
+  // --- Order API Methods (Existing) ---
+  Future<Map<String, dynamic>?> getAllOrders({
+    int page = 1,
+    int perPage = 15,
+    String? customerName, // New parameter
+    DateTime? startDate, // New parameter
+    DateTime? endDate, // New parameter
+    List<String>? orderTypes, // New parameter
+  }) async {
+    // Build the query parameters map
+    final Map<String, dynamic> queryParams = {'page': page.toString(), 'per_page': perPage.toString()};
+    if (customerName != null && customerName.isNotEmpty) {
+      queryParams['customer_name'] = customerName;
+    }
+    if (startDate != null) {
+      queryParams['start_date'] = DateFormat('yyyy-MM-dd').format(startDate);
+    }
+    if (endDate != null) {
+      queryParams['end_date'] = DateFormat('yyyy-MM-dd').format(endDate);
+    }
+    if (orderTypes != null && orderTypes.isNotEmpty) {
+      queryParams['order_type'] = orderTypes.join(','); // Or however your API expects a list
+    }
+
+    Uri actionUrl = _parseUri('/api/orders', queryParameters: queryParams);
+
+    try {
+      final response = await _httpGet(actionUrl);
+      if (response.body.isNotEmpty) {
+        // ... (existing parsing logic)
+        return json.decode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> createOrder(Map<String, dynamic> orderData) async {
+    Uri actionUrl = _parseUri('/api/orders');
+    try {
+      final response = await _httpPost(actionUrl, body: orderData);
+      return response.body.isNotEmpty ? json.decode(response.body) : null;
+    } catch (e) {
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> updateOrder(Map<String, dynamic> orderData) async {
+    Uri actionUrl = _parseUri('/api/orders/' + orderData['id']);
+    try {
+      final response = await _httpPut(actionUrl, body: orderData);
+      return response.body.isNotEmpty ? json.decode(response.body) : null;
+    } catch (e) {
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  // ... (other order methods remain the same) ...
+  Future<Map<String, dynamic>?> getOrderById(String orderId) async {
+    Uri actionUrl = _parseUri('/api/orders/$orderId');
+    try {
+      final response = await _httpGet(actionUrl);
+      return response.body.isNotEmpty ? json.decode(response.body) : null;
+    } catch (e) {
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
   Future<Map<String, dynamic>?> createOrderItem(Map<String, dynamic> orderData) async {
     Uri actionUrl = _parseUri('/api/orders-items');
     try {
@@ -488,5 +488,36 @@ class ApiV1 {
     } catch (e) {
       return {'error': true, 'message': e.toString()};
     }
+  }
+
+  // ... inside your ApiV1 class
+
+  Future<Map<String, dynamic>?> getAllInvoices({
+    int page = 1,
+    int perPage = 15,
+    String? customerName,
+    DateTime? startDate,
+    DateTime? endDate,
+    List<String>? invoiceTypes, // e.g., ['IV', 'CN']
+  }) async {
+    final Map<String, dynamic> queryParams = {'page': page.toString(), 'per_page': perPage.toString()};
+
+    if (customerName != null && customerName.isNotEmpty) {
+      queryParams['customer_name'] = customerName;
+    }
+    if (startDate != null) {
+      queryParams['start_date'] = DateFormat('yyyy-MM-dd').format(startDate);
+    }
+    if (endDate != null) {
+      queryParams['end_date'] = DateFormat('yyyy-MM-dd').format(endDate);
+    }
+    if (invoiceTypes != null && invoiceTypes.isNotEmpty) {
+      // The backend expects a comma-separated string
+      queryParams['invoice_type'] = invoiceTypes.join(',');
+    }
+    Uri actionUrl = _parseUri('/api/invoices', queryParameters: queryParams);
+    // Use the new endpoint for invoices
+    var response = await _httpGet(actionUrl);
+    return response.body.isNotEmpty ? json.decode(response.body) : null;
   }
 } //end of ApiV1 Class

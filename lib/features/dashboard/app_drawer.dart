@@ -5,6 +5,7 @@ import 'package:rempahapp/features/auth/auth_controller.dart';
 import 'package:rempahapp/features/customers/customer_list_page.dart';
 import 'package:rempahapp/features/dashboard/dashboard_page.dart';
 import 'package:rempahapp/features/inventory/inventory_list_page.dart';
+import 'package:rempahapp/features/invoices/invoice_list_page.dart';
 import 'package:rempahapp/features/messaging/messaging_landing_page.dart';
 import 'package:rempahapp/features/orders/order_list_page.dart';
 import 'package:rempahapp/features/receipts/receipt_list_page.dart';
@@ -52,7 +53,7 @@ class _AppDrawerState extends State<AppDrawer> {
       'title': 'Invoices',
       'onTap': (BuildContext context) {
         // Add your orders action here
-        Get.to(() => OrderListPage());
+        Get.to(() => InvoiceListPage());
       },
     },
     {
