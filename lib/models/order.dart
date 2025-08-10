@@ -4,6 +4,7 @@ import 'package:rempahapp/shared/functions.dart'; // for parseDoubleFromStringOr
 
 class Order {
   final String? id;
+  final String? orderType; // Add this new property
   final String? referenceNo;
   final String? branchId;
   final String? customerId;
@@ -25,6 +26,7 @@ class Order {
 
   Order({
     this.id,
+    this.orderType, // Add this here
     this.referenceNo,
     this.branchId,
     this.customerId,
@@ -52,6 +54,7 @@ class Order {
   Map<String, dynamic> toJson() {
     return {
       if (id != null) 'id': id,
+      if (orderType != null) 'type': orderType, // Add to toJson as well
       if (referenceNo != null) 'reference_no': referenceNo,
       if (branchId != null) 'branch_id': branchId,
       if (customerId != null) 'customer_id': customerId,
@@ -78,6 +81,7 @@ class Order {
 
     return Order(
       id: json['id']?.toString(),
+      orderType: json['type'] as String?, // Map the new API field
       referenceNo: json['reference_no'] as String?,
       branchId: json['branch_id'] as String?,
       customerId: json['customer_id']?.toString(),

@@ -2,6 +2,7 @@
 
 import 'package:get/get.dart'; // Assuming GetX is used for showVDialog or other utilities
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:rempahapp/models/global_state.dart'; // Assuming this is the correct path
 import 'dart:convert';
 import '../shared/shared.dart'; // Assuming this is the correct path for appDomain, aLog, showVDialog
@@ -52,14 +53,14 @@ class ApiV1 {
   // --- HTTP Helper Methods ---
   Future<http.Response> _httpGet(Uri actionUrl) async {
     aLog("GET Request to: $actionUrl");
-    aLog("Bearer Token: $bearerToken");
+    // aLog("Bearer Token: $bearerToken");
     return http.get(actionUrl, headers: {'Accept': 'application/json', 'Authorization': 'Bearer $bearerToken'});
   }
 
   Future<http.Response> _httpPost(Uri actionUrl, {Map<String, dynamic>? body}) async {
     aLog("POST Request to: $actionUrl");
     aLog("Body: ${json.encode(body)}");
-    aLog("Bearer Token: $bearerToken");
+    // aLog("Bearer Token: $bearerToken");
     return http.post(
       actionUrl,
       headers: {
@@ -246,11 +247,31 @@ class ApiV1 {
   }
 
   // --- Order API Methods (Existing) ---
-  Future<Map<String, dynamic>?> getAllOrders({int page = 1, int perPage = 15}) async {
-    Uri actionUrl = _parseUri(
-      '/api/orders',
-      queryParameters: {'page': page.toString(), 'per_page': perPage.toString()},
-    );
+  Future<Map<String, dynamic>?> getAllOrders({
+    int page = 1,
+    int perPage = 15,
+    String? customerName, // New parameter
+    DateTime? startDate, // New parameter
+    DateTime? endDate, // New parameter
+    List<String>? orderTypes, // New parameter
+  }) async {
+    // Build the query parameters map
+    final Map<String, dynamic> queryParams = {'page': page.toString(), 'per_page': perPage.toString()};
+    if (customerName != null && customerName.isNotEmpty) {
+      queryParams['customer_name'] = customerName;
+    }
+    if (startDate != null) {
+      queryParams['start_date'] = DateFormat('yyyy-MM-dd').format(startDate);
+    }
+    if (endDate != null) {
+      queryParams['end_date'] = DateFormat('yyyy-MM-dd').format(endDate);
+    }
+    if (orderTypes != null && orderTypes.isNotEmpty) {
+      queryParams['order_type'] = orderTypes.join(','); // Or however your API expects a list
+    }
+
+    Uri actionUrl = _parseUri('/api/orders', queryParameters: queryParams);
+
     try {
       final response = await _httpGet(actionUrl);
       if (response.body.isNotEmpty) {

@@ -352,6 +352,7 @@ String appendQueryParameter(String url, String paramName, String paramValue) {
 aLog(v) {
   var logger = Logger(printer: PrettyPrinter());
   logger.w(v);
+  print("11111");
 }
 
 bool isScreenLessThan6Inches(BuildContext context) {

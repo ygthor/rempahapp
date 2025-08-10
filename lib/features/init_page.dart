@@ -57,11 +57,11 @@ class _InitPageState extends State<InitPage> {
       if (token_info['error'] == 0) {
         var userInfo = token_info['data'];
         await pushMessage(Text('Retreived User Info ... '));
-        await pushMessage(
-          Text(userInfo['name'] + ' ' + userInfo['email'] + '✅'),
-        );
+        await pushMessage(Text(userInfo['name'] + ' ' + userInfo['email'] + '✅'));
         // gs.setEmp(user['data']);
         // aLog(user);
+      } else {
+        authController.logout();
       }
       await pushMessage(Text('Logging In ...'));
     }
@@ -81,12 +81,7 @@ class _InitPageState extends State<InitPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
-                    child: Image.asset(
-                      'assets/splashscreen/splash_icon.png',
-                      width: 100,
-                    ),
-                  ),
+                  Center(child: Image.asset('assets/splashscreen/splash_icon.png', width: 100)),
                   const SpinKitRipple(color: Colors.white, size: 80),
                   const SizedBox(height: 30),
                   ...listsMessages, // Unpack the list of widgets
