@@ -246,80 +246,24 @@ class ApiV1 {
     }
   }
 
-  // --- Order API Methods (Existing) ---
-  Future<Map<String, dynamic>?> getAllOrders({
-    int page = 1,
-    int perPage = 15,
-    String? customerName, // New parameter
-    DateTime? startDate, // New parameter
-    DateTime? endDate, // New parameter
-    List<String>? orderTypes, // New parameter
-  }) async {
-    // Build the query parameters map
-    final Map<String, dynamic> queryParams = {'page': page.toString(), 'per_page': perPage.toString()};
-    if (customerName != null && customerName.isNotEmpty) {
-      queryParams['customer_name'] = customerName;
-    }
-    if (startDate != null) {
-      queryParams['start_date'] = DateFormat('yyyy-MM-dd').format(startDate);
-    }
-    if (endDate != null) {
-      queryParams['end_date'] = DateFormat('yyyy-MM-dd').format(endDate);
-    }
-    if (orderTypes != null && orderTypes.isNotEmpty) {
-      queryParams['order_type'] = orderTypes.join(','); // Or however your API expects a list
-    }
-
-    Uri actionUrl = _parseUri('/api/orders', queryParameters: queryParams);
-
-    try {
-      final response = await _httpGet(actionUrl);
-      if (response.body.isNotEmpty) {
-        // ... (existing parsing logic)
-        return json.decode(response.body) as Map<String, dynamic>;
-      }
-      return null;
-    } catch (e) {
-      return {'error': true, 'message': e.toString()};
-    }
-  }
-
-  Future<Map<String, dynamic>?> createOrder(Map<String, dynamic> orderData) async {
-    Uri actionUrl = _parseUri('/api/orders');
-    try {
-      final response = await _httpPost(actionUrl, body: orderData);
-      return response.body.isNotEmpty ? json.decode(response.body) : null;
-    } catch (e) {
-      return {'error': true, 'message': e.toString()};
-    }
-  }
-
-  Future<Map<String, dynamic>?> updateOrder(Map<String, dynamic> orderData) async {
-    Uri actionUrl = _parseUri('/api/orders/' + orderData['id']);
-    try {
-      final response = await _httpPut(actionUrl, body: orderData);
-      return response.body.isNotEmpty ? json.decode(response.body) : null;
-    } catch (e) {
-      return {'error': true, 'message': e.toString()};
-    }
-  }
-
-  // ... (other order methods remain the same) ...
-  Future<Map<String, dynamic>?> getOrderById(String orderId) async {
-    Uri actionUrl = _parseUri('/api/orders/$orderId');
-    try {
-      final response = await _httpGet(actionUrl);
-      return response.body.isNotEmpty ? json.decode(response.body) : null;
-    } catch (e) {
-      return {'error': true, 'message': e.toString()};
-    }
-  }
-
   // --- Product API Methods (Existing) ---
   Future<dynamic> getProducts() async {
     GlobalState gs = Get.find();
     String selectedBranch = gs.selectedBranch ?? '';
     Uri actionUrl = _parseUri('/api/products', queryParameters: {'branchId': selectedBranch});
+    try {
+      final response = await _httpGet(actionUrl);
+      return response.body.isNotEmpty ? json.decode(response.body) : null;
+    } catch (e) {
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  // --- ICITEM API Methods (Existing) ---
+  Future<dynamic> getIcitem() async {
+    GlobalState gs = Get.find();
+    String selectedBranch = gs.selectedBranch ?? '';
+    Uri actionUrl = _parseUri('/api/icitem', queryParameters: {'branchId': selectedBranch});
     try {
       final response = await _httpGet(actionUrl);
       return response.body.isNotEmpty ? json.decode(response.body) : null;
@@ -459,6 +403,75 @@ class ApiV1 {
     }
   }
 
+  // --- Order API Methods (Existing) ---
+  Future<Map<String, dynamic>?> getAllOrders({
+    int page = 1,
+    int perPage = 15,
+    String? customerName, // New parameter
+    DateTime? startDate, // New parameter
+    DateTime? endDate, // New parameter
+    List<String>? orderTypes, // New parameter
+  }) async {
+    // Build the query parameters map
+    final Map<String, dynamic> queryParams = {'page': page.toString(), 'per_page': perPage.toString()};
+    if (customerName != null && customerName.isNotEmpty) {
+      queryParams['customer_name'] = customerName;
+    }
+    if (startDate != null) {
+      queryParams['start_date'] = DateFormat('yyyy-MM-dd').format(startDate);
+    }
+    if (endDate != null) {
+      queryParams['end_date'] = DateFormat('yyyy-MM-dd').format(endDate);
+    }
+    if (orderTypes != null && orderTypes.isNotEmpty) {
+      queryParams['order_type'] = orderTypes.join(','); // Or however your API expects a list
+    }
+
+    Uri actionUrl = _parseUri('/api/orders', queryParameters: queryParams);
+
+    try {
+      final response = await _httpGet(actionUrl);
+      if (response.body.isNotEmpty) {
+        // ... (existing parsing logic)
+        return json.decode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> createOrder(Map<String, dynamic> orderData) async {
+    Uri actionUrl = _parseUri('/api/orders');
+    try {
+      final response = await _httpPost(actionUrl, body: orderData);
+      return response.body.isNotEmpty ? json.decode(response.body) : null;
+    } catch (e) {
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> updateOrder(Map<String, dynamic> orderData) async {
+    Uri actionUrl = _parseUri('/api/orders/' + orderData['id']);
+    try {
+      final response = await _httpPut(actionUrl, body: orderData);
+      return response.body.isNotEmpty ? json.decode(response.body) : null;
+    } catch (e) {
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  // ... (other order methods remain the same) ...
+  Future<Map<String, dynamic>?> getOrderById(String orderId) async {
+    Uri actionUrl = _parseUri('/api/orders/$orderId');
+    try {
+      final response = await _httpGet(actionUrl);
+      return response.body.isNotEmpty ? json.decode(response.body) : null;
+    } catch (e) {
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
   Future<Map<String, dynamic>?> createOrderItem(Map<String, dynamic> orderData) async {
     Uri actionUrl = _parseUri('/api/orders-items');
     try {
@@ -488,5 +501,123 @@ class ApiV1 {
     } catch (e) {
       return {'error': true, 'message': e.toString()};
     }
+  }
+
+  // ... inside your ApiV1 class
+
+  // --- Invoice (Artran) API Methods ---
+
+  /// Fetches a paginated list of invoices.
+  Future<Map<String, dynamic>?> getAllInvoices({
+    int page = 1,
+    int perPage = 15,
+    String? customerName,
+    DateTime? startDate,
+    DateTime? endDate,
+    List<String>? invoiceTypes,
+  }) async {
+    final Map<String, dynamic> queryParams = {'page': page.toString(), 'per_page': perPage.toString()};
+
+    if (customerName != null && customerName.isNotEmpty) {
+      queryParams['customer_name'] = customerName;
+    }
+    if (startDate != null) {
+      queryParams['start_date'] = DateFormat('yyyy-MM-dd').format(startDate);
+    }
+    if (endDate != null) {
+      queryParams['end_date'] = DateFormat('yyyy-MM-dd').format(endDate);
+    }
+    if (invoiceTypes != null && invoiceTypes.isNotEmpty) {
+      queryParams['invoice_type'] = invoiceTypes.join(',');
+    }
+    Uri actionUrl = _parseUri('/api/invoices', queryParameters: queryParams);
+    try {
+      final response = await _httpGet(actionUrl);
+      return _handleResponse(response);
+    } catch (e) {
+      aLog("getAllInvoices Exception: $e");
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  /// Creates a new invoice header.
+  Future<Map<String, dynamic>?> createInvoice(Map<String, dynamic> invoiceData) async {
+    Uri actionUrl = _parseUri('/api/invoices');
+    try {
+      final response = await _httpPost(actionUrl, body: invoiceData);
+      return _handleResponse(response);
+    } catch (e) {
+      aLog("createInvoice Exception: $e");
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  /// Updates an existing invoice header.
+  Future<Map<String, dynamic>?> updateInvoice(String? refNo, Map<String, dynamic> invoiceData) async {
+    Uri actionUrl = _parseUri('/api/invoices/$refNo');
+    try {
+      final response = await _httpPut(actionUrl, body: invoiceData);
+      return _handleResponse(response);
+    } catch (e) {
+      aLog("updateInvoice Exception: $e");
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  // --- Invoice Item (ArTransItem) API Methods ---
+
+  /// Creates a new item and adds it to an existing invoice.
+  Future<Map<String, dynamic>?> createInvoiceItem(Map<String, dynamic> itemData) async {
+    // The endpoint for managing individual items
+    Uri actionUrl = _parseUri('/api/invoice-items');
+    try {
+      final response = await _httpPost(actionUrl, body: itemData);
+      return _handleResponse(response);
+    } catch (e) {
+      aLog("createInvoiceItem Exception: $e");
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  /// Deletes an item from an invoice.
+  Future<Map<String, dynamic>?> deleteInvoiceItem(int itemId) async {
+    Uri actionUrl = _parseUri('/api/invoice-items/$itemId');
+    try {
+      final response = await _httpDelete(actionUrl);
+      // Handle successful empty response for deletes
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return response.body.isNotEmpty
+            ? json.decode(response.body)
+            : {'success': true, 'message': 'Item deleted successfully.'};
+      }
+      return _handleResponse(response);
+    } catch (e) {
+      aLog("deleteInvoiceItem Exception: $e");
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  // --- Generic Response Handler ---
+  Map<String, dynamic>? _handleResponse(http.Response response) {
+    aLog("Response: ${response.statusCode} - ${response.body}");
+    if (response.body.isNotEmpty) {
+      final decodedBody = json.decode(response.body);
+      if (decodedBody is Map<String, dynamic>) {
+        // Check for backend-specific error flags if any
+        if (decodedBody['error'] == true || decodedBody['error'] == 1) {
+          showVDialog(title: "API Error", text: decodedBody['message'] ?? 'An unknown error occurred.');
+          return decodedBody;
+        }
+        return decodedBody;
+      }
+    }
+    if (response.statusCode >= 400) {
+      showVDialog(
+        title: 'Error ${response.statusCode}',
+        text: response.reasonPhrase ?? 'An unknown server error occurred.',
+      );
+      return {'error': true, 'message': response.body, 'statusCode': response.statusCode};
+    }
+    return null;
   }
 } //end of ApiV1 Class

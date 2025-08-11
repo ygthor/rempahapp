@@ -5,6 +5,7 @@ import 'package:rempahapp/features/auth/auth_controller.dart';
 import 'package:rempahapp/features/customers/customer_list_page.dart';
 import 'package:rempahapp/features/dashboard/dashboard_page.dart';
 import 'package:rempahapp/features/inventory/inventory_list_page.dart';
+import 'package:rempahapp/features/invoices/invoice_list_page.dart';
 import 'package:rempahapp/features/messaging/messaging_landing_page.dart';
 import 'package:rempahapp/features/orders/order_list_page.dart';
 import 'package:rempahapp/features/receipts/receipt_list_page.dart';
@@ -40,11 +41,19 @@ class _AppDrawerState extends State<AppDrawer> {
       },
     },
     {
-      'icon': FontAwesomeIcons.fileInvoiceDollar,
+      'icon': FontAwesomeIcons.clipboardList,
       'title': 'Orders',
       'onTap': (BuildContext context) {
         // Add your orders action here
         Get.to(() => OrderListPage());
+      },
+    },
+    {
+      'icon': FontAwesomeIcons.fileInvoiceDollar,
+      'title': 'Invoices',
+      'onTap': (BuildContext context) {
+        // Add your orders action here
+        Get.to(() => InvoiceListPage());
       },
     },
     {
@@ -102,16 +111,9 @@ class _AppDrawerState extends State<AppDrawer> {
                 width: double.infinity,
                 child: Column(
                   children: [
-                    const Icon(
-                      Icons.account_circle,
-                      size: 64,
-                      color: Colors.black,
-                    ),
+                    const Icon(Icons.account_circle, size: 64, color: Colors.black),
                     const SizedBox(height: 10),
-                    Text(
-                      'Welcome! ${user['username']}',
-                      style: const TextStyle(color: Colors.black, fontSize: 18),
-                    ),
+                    Text('Welcome! ${user['username']}', style: const TextStyle(color: Colors.black, fontSize: 18)),
                     Text("Branch Selected: ${gs.selectedBranch}"),
                   ],
                 ),
@@ -123,14 +125,9 @@ class _AppDrawerState extends State<AppDrawer> {
                 children:
                     _drawerItems.map((item) {
                       return ListTile(
-                        leading: Icon(
-                          item['icon'] as IconData,
-                        ), // Cast to IconData
+                        leading: Icon(item['icon'] as IconData), // Cast to IconData
                         title: Text(item['title'] as String), // Cast to String
-                        onTap:
-                            () => (item['onTap'] as Function(BuildContext))(
-                              context,
-                            ), // Cast and call
+                        onTap: () => (item['onTap'] as Function(BuildContext))(context), // Cast and call
                       );
                     }).toList(),
               ),
@@ -152,24 +149,17 @@ class _AppDrawerState extends State<AppDrawer> {
                     builder:
                         (context) => AlertDialog(
                           title: const Text('Logout'),
-                          content: const Text(
-                            'Are you sure you want to log out?',
-                          ),
+                          content: const Text('Are you sure you want to log out?'),
                           actions: [
                             TextButton(
-                              onPressed:
-                                  () => Navigator.pop(
-                                    context,
-                                  ), // Closes the dialog
+                              onPressed: () => Navigator.pop(context), // Closes the dialog
                               child: const Text('Cancel'),
                             ),
                             TextButton(
                               onPressed: () {
                                 authController.logout();
                                 Navigator.pop(context); // Closes the dialog
-                                Navigator.pop(
-                                  context,
-                                ); // Closes the drawer if not already closed
+                                Navigator.pop(context); // Closes the drawer if not already closed
                               },
                               child: const Text('Logout'),
                             ),
