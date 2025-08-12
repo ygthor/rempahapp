@@ -297,7 +297,8 @@ class _CustomerListPageState extends State<CustomerListPage> {
                                 ),
                               ),
                               title: Text(
-                                customer.companyName ?? customer.name ?? 'N/A',
+                                // customer.companyName ?? customer.name ?? 'N/A',
+                                customer.name ?? 'N/A',
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                               ),
                               subtitle: Column(

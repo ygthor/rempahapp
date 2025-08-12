@@ -86,7 +86,7 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
   }
 
   Future<void> _fetchInvoice() async {
-    if (_invoice == null) _loadInvoiceDetails();
+    await _loadInvoiceDetails();
 
     _customerDisplayController.text = _invoice!.name ?? '';
     _selectedCustomer = Customer(customerCode: _invoice!.custNo, name: _invoice!.name);
@@ -96,17 +96,25 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
     // _taxPercentageController.text = _order!.tax1Percentage.toString();
   }
 
-  void _loadInvoiceDetails() {
-    final inv = _invoice!;
-    _customerDisplayController.text = inv.name ?? '';
-    _selectedCustomer = Customer(customerCode: inv.custNo, name: inv.name);
-    _remarksController.text = inv.note ?? '';
-    _referenceNoController.text = inv.refNo ?? 'N/A';
-    _typeController.text = inv.type ?? 'IV';
-    _selectedDate = inv.date;
-    _dateController.text = inv.date != null ? DateFormat('yyyy-MM-dd').format(inv.date!) : '';
-    _currentInvoiceItems = List<ArTransItem>.from(inv.items);
-    setState(() {});
+  Future _loadInvoiceDetails() async {
+    aLog("load invoice");
+    if (_invoice!.refNo != null) {
+      var res = await _api.getInvoiceByRefNo(_invoice!.refNo!);
+
+      _invoice = Invoice.fromJson(res!['data']);
+      Invoice inv = _invoice!;
+
+      _customerDisplayController.text = inv.name ?? '';
+      _selectedCustomer = Customer(customerCode: inv.custNo, name: inv.name);
+      _remarksController.text = inv.note ?? '';
+      _referenceNoController.text = inv.refNo ?? 'N/A';
+      _typeController.text = inv.type ?? 'IV';
+      _selectedDate = inv.date;
+      _dateController.text = inv.date != null ? DateFormat('yyyy-MM-dd').format(inv.date!) : '';
+      _currentInvoiceItems = List<ArTransItem>.from(inv.items);
+
+      setState(() {});
+    }
   }
 
   Future<void> _fetchProducts() async {
@@ -144,7 +152,7 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
       }
 
       if (productDataList != null) {
-        _apiProducts =
+        final rawProducts =
             productDataList
                 .map((data) {
                   try {
@@ -156,6 +164,17 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
                 })
                 .whereType<ApiProduct>()
                 .toList();
+
+        // --- FIX: De-duplicate the list to prevent the assertion error ---
+        // We use a Map to ensure every ITEMNO is unique.
+        // If a duplicate ITEMNO is found, it will overwrite the previous one.
+        final uniqueProductMap = <String, ApiProduct>{};
+        for (final product in rawProducts) {
+          uniqueProductMap[product.ITEMNO] = product;
+        }
+
+        // Assign the clean, de-duplicated list of products.
+        _apiProducts = uniqueProductMap.values.toList();
       } else if (!responseError && productDataList == null) {
         // If not an error but list is null/not found
         _productLoadingErrorMessage =
@@ -174,6 +193,8 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
   @override
   void dispose() {
     _pageController.dispose();
+    _customerDisplayController.removeListener(_calculateAmount);
+    _unitPriceController.removeListener(_calculateAmount);
     _customerDisplayController.dispose();
     _quantityController.dispose();
     _unitPriceController.dispose();
@@ -202,29 +223,62 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
     });
   }
 
-  void _addItemToInvoice() async {
-    // ... (Validation logic similar to Order form)
-
-    if (_invoice == null) {
-      showVDialog(title: "Error", text: "Please save the invoice header first.");
+  Future<void> _saveInvoiceItem({ArTransItem? itemToEdit}) async {
+    // Basic Validation
+    if (_selectedApiProduct == null) {
+      showVDialog(title: "Validation Error", text: "Please select a product.");
+      return;
+    }
+    final double? quantity = double.tryParse(_quantityController.text);
+    if (quantity == null || quantity <= 0) {
+      showVDialog(title: "Validation Error", text: "Please enter a valid quantity.");
+      return;
+    }
+    final double? unitPrice = double.tryParse(_unitPriceController.text);
+    if (unitPrice == null || unitPrice < 0) {
+      showVDialog(title: "Validation Error", text: "Please enter a valid unit price.");
       return;
     }
 
     setState(() => _isLoading = true);
+    Get.back(); // Close the modal sheet first
 
-    var body = {
-      "artran_id": _invoice!.id,
+    final body = {
+      "artran_id": _invoice!.id, // Required for create
       "product_id": _selectedApiProduct!.ITEMNO.toString(),
-      "quantity": double.tryParse(_quantityController.text) ?? 0.0,
-      "unit_price": double.tryParse(_unitPriceController.text) ?? 0.0,
+      "quantity": quantity,
+      "unit_price": unitPrice,
     };
 
     try {
-      final response = await _api.createInvoiceItem(body);
-      // ... (Handle success/error response similar to your order form)
-      // On success, refresh the invoice details to get the updated item list
+      final bool isEditing = itemToEdit != null;
+      final response;
+
+      if (isEditing) {
+        body.remove("artran_id"); // Not needed for an update call
+        response = await _api.updateInvoiceItem(itemToEdit.refNo, body);
+      } else {
+        response = await _api.createInvoiceItem(body);
+      }
+
+      if (response != null && (response['error'] == 0 || response['error'] == false)) {
+        await showVDialog(
+          title: "Success",
+          text: response['message'] ?? (isEditing ? "Item updated successfully." : "Item added successfully."),
+          type: 'success',
+        );
+        // Refresh the entire invoice to get updated totals and the correct item list
+        await _loadInvoiceDetails();
+      } else {
+        showVDialog(title: "Error", text: response?['message'] ?? "An unknown error occurred while saving the item.");
+      }
+    } catch (e) {
+      aLog("Error saving invoice item: $e");
+      showVDialog(title: "Error", text: "Failed to save the item due to an exception.");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -553,28 +607,97 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
   Widget _buildInvoiceItemsTab() {
     return Column(
       children: [
-        // ... (Header with customer name and total amount is similar)
-        Expanded(
-          child: ListView.builder(
-            itemCount: _currentInvoiceItems.length,
-            itemBuilder: (context, index) {
-              final item = _currentInvoiceItems[index];
-              return Card(
-                child: ListTile(
-                  title: Text(item.description),
-                  subtitle: Text('Qty: ${item.quantity} @ ${item.price.toStringAsFixed(2)}'),
-                  trailing: Text('Total: ${item.amountBilled.toStringAsFixed(2)}'),
-                  // Add delete button here
-                ),
-              );
-            },
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total Items: ${_currentInvoiceItems.length}', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'RM ${_totalInvoiceAmount.toStringAsFixed(2)}',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
+        ),
+        Expanded(
+          child:
+              _currentInvoiceItems.isEmpty
+                  ? const Center(
+                    child: Text(
+                      "No items have been added yet.\nUse the 'Add New Item' button below.",
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                  : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 80), // Padding for FAB
+                    itemCount: _currentInvoiceItems.length,
+                    itemBuilder: (context, index) {
+                      final item = _currentInvoiceItems[index];
+                      return Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        child: InkWell(
+                          onTap: () => _showEditItemForm(item), // EDIT ACTION
+                          borderRadius: BorderRadius.circular(12),
+                          child: ListTile(
+                            title: Text(item.description, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            subtitle: Text('Qty: ${item.quantity} @ RM ${item.price.toStringAsFixed(2)}'),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'RM ${item.amountBilled.toStringAsFixed(2)}',
+                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                  onPressed: () => _deleteInvoiceItem(item), // DELETE ACTION
+                                  tooltip: 'Delete Item',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
         ),
       ],
     );
   }
 
-  void _showProductModalSheet(BuildContext context) {
+  // --- NEW: Helper method to show modal for adding a new item ---
+  void _showAddItemForm() {
+    // Reset form fields before showing
+    setState(() {
+      _selectedApiProduct = null;
+      _quantityController.text = '1';
+      _unitPriceController.text = '0.00';
+      _calculateAmount();
+    });
+    _showProductModalSheet(context); // Call without itemToEdit
+  }
+
+  // --- NEW: Helper method to show modal for editing an existing item ---
+  void _showEditItemForm(ArTransItem item) {
+    // Pre-fill form fields with existing item data
+    setState(() {
+      // Find the corresponding ApiProduct in our list
+      _selectedApiProduct = _apiProducts.firstWhere(
+        (p) => p.ITEMNO == item.tranCode,
+        orElse: () => ApiProduct(DESP: item.description, ITEMNO: item.tranCode),
+      );
+      _quantityController.text = item.quantity.toString();
+      _unitPriceController.text = item.price.toStringAsFixed(2);
+      _calculateAmount();
+    });
+    _showProductModalSheet(context, itemToEdit: item); // Call with itemToEdit
+  }
+
+  // --- MODIFIED: Now accepts an optional item for editing ---
+  void _showProductModalSheet(BuildContext context, {ArTransItem? itemToEdit}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -585,7 +708,7 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: _buildProductForm(context), // extracted widget
+              child: _buildProductForm(context, itemToEdit: itemToEdit), // Pass item to form
             ),
           ),
         );
@@ -593,109 +716,99 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
     );
   }
 
-  Widget _buildProductForm(BuildContext context) {
+  // --- MODIFIED: Now accepts an optional item to change its behavior ---
+  Widget _buildProductForm(BuildContext context, {ArTransItem? itemToEdit}) {
+    final bool isEditing = itemToEdit != null;
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus(); // Hides the keyboard
       },
-      behavior: HitTestBehavior.opaque, // Ensures taps on empty space are detected
-
+      behavior: HitTestBehavior.opaque,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 16),
-          // Product Selection Section
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Add New Item',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(), // Close the modal
-                    tooltip: 'Close',
-                  ),
-                ],
+              Text(
+                isEditing ? 'Edit Item' : 'Add New Item',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 12),
-              _isLoadingProducts
-                  ? const Center(child: Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator()))
-                  : _productLoadingErrorMessage.isNotEmpty
-                  ? Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(_productLoadingErrorMessage, style: const TextStyle(color: Colors.red)),
-                  )
-                  : DropdownButtonFormField<ApiProduct>(
-                    value: _selectedApiProduct,
-                    decoration: const InputDecoration(
-                      labelText: 'Product *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(FontAwesomeIcons.box),
-                    ),
-                    items:
-                        _apiProducts
-                            .map(
-                              (ApiProduct product) =>
-                                  DropdownMenuItem<ApiProduct>(value: product, child: Text(product.DESP)),
-                            )
-                            .toList(),
-                    onChanged: _onApiProductChanged,
-                    validator: (value) => value == null ? 'Please select a product' : null,
-                    isExpanded: true,
-                  ),
-              const SizedBox(height: 12),
-              _buildTextFormField(
-                _quantityController,
-                'Quantity *',
-                FontAwesomeIcons.cubesStacked,
-                TextInputType.number,
-                (v) {
-                  if (v == null || v.isEmpty) return 'Enter quantity';
-                  if (double.tryParse(v) == null) return 'Invalid number';
-
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 12),
-              _buildTextFormField(
-                _unitPriceController,
-                'Unit Price *',
-                FontAwesomeIcons.dollarSign,
-                const TextInputType.numberWithOptions(decimal: true),
-                (v) {
-                  if (v == null || v.isEmpty) return 'Enter unit price';
-                  final price = double.tryParse(v);
-                  if (price == null) return 'Invalid number';
-
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildTextFormField(
-                _amountController,
-                'Amount',
-                FontAwesomeIcons.moneyBillWave,
-                TextInputType.number,
-                null,
-                readOnly: true,
-                textStyle: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop(), tooltip: 'Close'),
             ],
           ),
-
-          Container(
-            padding: EdgeInsets.all(5),
-            alignment: Alignment.center,
-            child: ElevatedButton(onPressed: _addItemToInvoice, child: Text('Add To Order')),
+          const SizedBox(height: 20),
+          _isLoadingProducts
+              ? const Center(child: Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator()))
+              : _productLoadingErrorMessage.isNotEmpty
+              ? Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(_productLoadingErrorMessage, style: const TextStyle(color: Colors.red)),
+              )
+              : DropdownButtonFormField<ApiProduct>(
+                // value: _selectedApiProduct,
+                decoration: const InputDecoration(
+                  labelText: 'Product *',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(FontAwesomeIcons.box),
+                ),
+                items:
+                    _apiProducts
+                        .map(
+                          (ApiProduct product) =>
+                              DropdownMenuItem<ApiProduct>(value: product, child: Text(product.DESP)),
+                        )
+                        .toList(),
+                onChanged: _onApiProductChanged,
+                validator: (value) => value == null ? 'Please select a product' : null,
+                isExpanded: true,
+              ),
+          const SizedBox(height: 16),
+          _buildTextFormField(_quantityController, 'Quantity *', FontAwesomeIcons.cubesStacked, TextInputType.number, (
+            v,
+          ) {
+            if (v == null || v.isEmpty) return 'Enter quantity';
+            if (double.tryParse(v) == null) return 'Invalid number';
+            return null;
+          }),
+          const SizedBox(height: 16),
+          _buildTextFormField(
+            _unitPriceController,
+            'Unit Price *',
+            FontAwesomeIcons.dollarSign,
+            const TextInputType.numberWithOptions(decimal: true),
+            (v) {
+              if (v == null || v.isEmpty) return 'Enter unit price';
+              if (double.tryParse(v) == null) return 'Invalid number';
+              return null;
+            },
           ),
-          const SizedBox(height: 50),
+          const SizedBox(height: 16),
+          _buildTextFormField(
+            _amountController,
+            'Amount',
+            FontAwesomeIcons.moneyBillWave,
+            TextInputType.number,
+            null,
+            readOnly: true,
+            textStyle: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _saveInvoiceItem(itemToEdit: itemToEdit), // Pass item to save method
+              icon: Icon(isEditing ? Icons.save_as_outlined : Icons.add_shopping_cart_outlined),
+              label: Text(isEditing ? 'Update Item' : 'Add Item to Invoice'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                textStyle: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
         ],
       ),
     );

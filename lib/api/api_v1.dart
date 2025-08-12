@@ -527,6 +527,9 @@ class ApiV1 {
     if (customerName != null && customerName.isNotEmpty) {
       queryParams['customer_name'] = customerName;
     }
+    if (customerCode != null && customerCode.isNotEmpty) {
+      queryParams['CUSTNO'] = customerCode;
+    }
     if (startDate != null) {
       queryParams['start_date'] = DateFormat('yyyy-MM-dd').format(startDate);
     }
@@ -545,6 +548,16 @@ class ApiV1 {
       return _handleResponse(response);
     } catch (e) {
       aLog("getAllInvoices Exception: $e");
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> getInvoiceByRefNo(String refNo) async {
+    Uri actionUrl = _parseUri('/api/invoices/$refNo');
+    try {
+      final response = await _httpGet(actionUrl);
+      return response.body.isNotEmpty ? json.decode(response.body) : null;
+    } catch (e) {
       return {'error': true, 'message': e.toString()};
     }
   }
@@ -602,6 +615,17 @@ class ApiV1 {
       return _handleResponse(response);
     } catch (e) {
       aLog("deleteInvoiceItem Exception: $e");
+      return {'error': true, 'message': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> updateInvoiceItem(String? refNo, Map<String, dynamic> invoiceData) async {
+    Uri actionUrl = _parseUri('/api/invoices-items/$refNo');
+    try {
+      final response = await _httpPut(actionUrl, body: invoiceData);
+      return _handleResponse(response);
+    } catch (e) {
+      aLog("updateInvoice Exception: $e");
       return {'error': true, 'message': e.toString()};
     }
   }

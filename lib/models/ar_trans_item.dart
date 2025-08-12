@@ -1,6 +1,7 @@
 // lib/models/ar_trans_item.dart
 
 class ArTransItem {
+  final int? id;
   final String refNo;
   final String tranCode;
   final String description;
@@ -9,6 +10,7 @@ class ArTransItem {
   final double amountBilled;
 
   ArTransItem({
+    this.id,
     required this.refNo,
     required this.tranCode,
     required this.description,
@@ -27,6 +29,7 @@ class ArTransItem {
     }
 
     return ArTransItem(
+      id: json['id'],
       refNo: json['REFNO'] as String? ?? '',
       tranCode: json['TRANCODE'] as String? ?? 'N/A',
       description: json['DESP'] as String? ?? 'Unknown Item',

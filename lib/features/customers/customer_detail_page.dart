@@ -92,7 +92,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> with TickerProv
       length: 6,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.customer.companyName ?? 'Customer Details'),
+          title: Text(widget.customer.name ?? 'Customer Details'),
           actions: _buildAppBarActions(),
           bottom: TabBar(
             controller: _tabController,
@@ -222,6 +222,8 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> with TickerProv
             title: 'Contact Information',
             icon: FontAwesomeIcons.addressBook,
             children: [
+              _InfoTile(icon: FontAwesomeIcons.userTie, title: 'Code', subtitle: widget.customer.customerCode ?? 'N/A'),
+              _InfoTile(icon: FontAwesomeIcons.userTie, title: 'Name', subtitle: widget.customer.name ?? 'N/A'),
               _InfoTile(
                 icon: FontAwesomeIcons.userTie,
                 title: 'Contact Person',
