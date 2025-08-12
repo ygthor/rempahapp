@@ -407,6 +407,7 @@ class ApiV1 {
   Future<Map<String, dynamic>?> getAllOrders({
     int page = 1,
     int perPage = 15,
+    String? customerCode, // New parameter
     String? customerName, // New parameter
     DateTime? startDate, // New parameter
     DateTime? endDate, // New parameter
@@ -414,6 +415,9 @@ class ApiV1 {
   }) async {
     // Build the query parameters map
     final Map<String, dynamic> queryParams = {'page': page.toString(), 'per_page': perPage.toString()};
+    if (customerCode != null && customerCode.isNotEmpty) {
+      queryParams['customer_code'] = customerCode;
+    }
     if (customerName != null && customerName.isNotEmpty) {
       queryParams['customer_name'] = customerName;
     }
@@ -511,10 +515,12 @@ class ApiV1 {
   Future<Map<String, dynamic>?> getAllInvoices({
     int page = 1,
     int perPage = 15,
+    String? customerCode,
     String? customerName,
     DateTime? startDate,
     DateTime? endDate,
     List<String>? invoiceTypes,
+    String? invoiceType,
   }) async {
     final Map<String, dynamic> queryParams = {'page': page.toString(), 'per_page': perPage.toString()};
 
@@ -526,6 +532,9 @@ class ApiV1 {
     }
     if (endDate != null) {
       queryParams['end_date'] = DateFormat('yyyy-MM-dd').format(endDate);
+    }
+    if (invoiceType != null && invoiceType.isNotEmpty) {
+      queryParams['invoice_type'] = invoiceType;
     }
     if (invoiceTypes != null && invoiceTypes.isNotEmpty) {
       queryParams['invoice_type'] = invoiceTypes.join(',');
@@ -619,5 +628,13 @@ class ApiV1 {
       return {'error': true, 'message': response.body, 'statusCode': response.statusCode};
     }
     return null;
+  }
+
+  Future<Map<String, dynamic>?> getOrdersForCustomer({customerCode, type}) {
+    return getAllOrders(customerCode: customerCode, orderTypes: type);
+  }
+
+  Future<Map<String, dynamic>?> getInvoicesForCustomer({customerCode, type}) {
+    return getAllInvoices(customerCode: customerCode, invoiceType: type);
   }
 } //end of ApiV1 Class

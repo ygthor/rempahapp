@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:rempahapp/models/customer.dart';
 import 'package:rempahapp/models/order.dart'; // Ensure this path is correct
 import 'package:rempahapp/models/order_item.dart'; // Ensure this path is correct
 // Assuming the simple ApiProduct model is still relevant for product selection
@@ -23,37 +24,6 @@ class ApiProduct {
   }
 }
 // --- End of ApiProduct Model ---
-
-// Customer model (as defined in your CustomerListPageFromApi or a shared models file)
-// This should have an integer `id` field.
-class Customer {
-  final int id; // From API "id": 3 (integer)
-  final String? customerCode;
-  final String? name;
-  final String? companyName;
-  // Add other fields as necessary, matching your actual Customer model
-  // For this example, id and companyName are most relevant for the form.
-
-  Customer({
-    required this.id,
-    this.customerCode,
-    this.name,
-    this.companyName,
-    // Initialize other fields
-  });
-
-  // Add fromJson if not already present in your shared Customer model
-  factory Customer.fromJson(Map<String, dynamic> json) {
-    return Customer(
-      id: json['id'] as int, // API sends 'id' as int
-      customerCode: json['customer_code'] as String?,
-      name: json['name'] as String?,
-      companyName: json['company_name'] as String?,
-      // Parse other fields from your Customer API response here
-      // e.g., address1: json['address1'] as String?,
-    );
-  }
-}
 
 class OrderFormPage extends StatefulWidget {
   final Order? order; // To support editing later
@@ -124,7 +94,7 @@ class _OrderFormPageState extends State<OrderFormPage> {
         await _fetchOrder();
         _customerDisplayController.text = _order!.customerName ?? '';
         _selectedCustomer = Customer(
-          id: int.tryParse(_order!.customerId ?? '') ?? 0, // This needs to be the actual int ID
+          id: _order!.customerId, // This needs to be the actual int ID
           companyName: _order!.customerName,
         );
         _remarksController.text = _order!.remarks ?? '';

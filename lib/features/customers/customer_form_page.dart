@@ -23,8 +23,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
   // Controllers for text fields
   // These match the fields in your original CustomerFormPage
   final TextEditingController _customerCodeController = TextEditingController();
-  final TextEditingController _companyController =
-      TextEditingController(); // Maps to company_name
+  final TextEditingController _companyController = TextEditingController(); // Maps to company_name
   final TextEditingController _address1Controller = TextEditingController();
   final TextEditingController _address2Controller = TextEditingController();
   final TextEditingController _postcodeController = TextEditingController();
@@ -33,24 +32,20 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
   final TextEditingController _telephone1Controller = TextEditingController();
   final TextEditingController _telephone2Controller = TextEditingController();
   final TextEditingController _faxNoController = TextEditingController();
-  final TextEditingController _contactPersonController =
-      TextEditingController(); // Was _contact1Controller
-  final TextEditingController _customerGroupController =
-      TextEditingController();
+  final TextEditingController _contactPersonController = TextEditingController(); // Was _contact1Controller
+  final TextEditingController _customerGroupController = TextEditingController();
   final TextEditingController _customerTypeController = TextEditingController();
   final TextEditingController _lotTypeController = TextEditingController();
 
   // Additional controllers for fields from the more detailed Customer model (if needed)
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController =
-      TextEditingController(); // General phone, might map to telephone1
+  final TextEditingController _phoneController = TextEditingController(); // General phone, might map to telephone1
   final TextEditingController _paymentTermController = TextEditingController();
   final TextEditingController _maxDiscountController = TextEditingController();
   // Note: segment and payment_type were dropdowns in CustomerDetailPage,
   // this form currently uses TextFields. Adapt if dropdowns are needed.
   final TextEditingController _segmentController = TextEditingController();
-  final TextEditingController _paymentTypeDetailController =
-      TextEditingController(); // Renamed to avoid conflict
+  final TextEditingController _paymentTypeDetailController = TextEditingController(); // Renamed to avoid conflict
 
   bool get _isEditMode => widget.customer != null;
 
@@ -63,32 +58,23 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
     if (_isEditMode && widget.customer != null) {
       // Populate fields if editing an existing customer
       _customerCodeController.text = widget.customer!.customerCode ?? '';
-      _companyController.text =
-          widget.customer!.companyName ??
-          ''; // Assuming companyController maps to companyName
+      _companyController.text = widget.customer!.companyName ?? ''; // Assuming companyController maps to companyName
       _address1Controller.text = widget.customer!.address1 ?? '';
       _address2Controller.text = widget.customer!.address2 ?? '';
       _postcodeController.text = widget.customer!.postcode ?? '';
       _stateController.text = widget.customer!.state ?? '';
-      _territoryController.text =
-          widget.customer!.territory ?? 'ALMA'; // Default if null
+      _territoryController.text = widget.customer!.territory ?? 'ALMA'; // Default if null
       _telephone1Controller.text = widget.customer!.telephone1 ?? '';
       _telephone2Controller.text = widget.customer!.telephone2 ?? '';
       _faxNoController.text = widget.customer!.faxNo ?? '';
       _contactPersonController.text = widget.customer!.contactPerson ?? '';
-      _customerGroupController.text =
-          widget.customer!.customerGroup ?? 'RESTAURANT'; // Default if null
-      _customerTypeController.text =
-          widget.customer!.customerType ?? 'KEYACC'; // Default if null
-      _lotTypeController.text =
-          widget.customer!.lotType ?? 'COR'; // Default if null
+      _customerGroupController.text = widget.customer!.customerGroup ?? 'RESTAURANT'; // Default if null
+      _customerTypeController.text = widget.customer!.customerType ?? 'KEYACC'; // Default if null
+      _lotTypeController.text = widget.customer!.lotType ?? 'COR'; // Default if null
 
       // Populate additional fields
       _emailController.text = widget.customer!.email ?? '';
-      _phoneController.text =
-          widget.customer!.phone ??
-          widget.customer!.telephone1 ??
-          ''; // Fallback to telephone1
+      _phoneController.text = widget.customer!.phone ?? widget.customer!.telephone1 ?? ''; // Fallback to telephone1
       _paymentTermController.text = widget.customer!.paymentTerm ?? '';
       _maxDiscountController.text = widget.customer!.maxDiscount ?? '';
       _segmentController.text = widget.customer!.segment ?? '';
@@ -131,10 +117,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
   Future<void> _saveForm() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please correct the errors in the form.'),
-          backgroundColor: Colors.redAccent,
-        ),
+        const SnackBar(content: Text('Please correct the errors in the form.'), backgroundColor: Colors.redAccent),
       );
       return;
     }
@@ -151,50 +134,24 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
       'customer_code': _customerCodeController.text,
       'company_name': _companyController.text, // Mapped from _companyController
       'address1': _address1Controller.text,
-      'address2':
-          _address2Controller.text.isEmpty ? null : _address2Controller.text,
-      'postcode':
-          _postcodeController.text.isEmpty ? null : _postcodeController.text,
+      'address2': _address2Controller.text.isEmpty ? null : _address2Controller.text,
+      'postcode': _postcodeController.text.isEmpty ? null : _postcodeController.text,
       'state': _stateController.text.isEmpty ? null : _stateController.text,
       'territory': _territoryController.text,
-      'telephone1':
-          _telephone1Controller.text.isEmpty
-              ? null
-              : _telephone1Controller.text,
-      'telephone2':
-          _telephone2Controller.text.isEmpty
-              ? null
-              : _telephone2Controller.text,
+      'telephone1': _telephone1Controller.text.isEmpty ? null : _telephone1Controller.text,
+      'telephone2': _telephone2Controller.text.isEmpty ? null : _telephone2Controller.text,
       'fax_no': _faxNoController.text.isEmpty ? null : _faxNoController.text,
-      'contact_person':
-          _contactPersonController.text.isEmpty
-              ? null
-              : _contactPersonController.text,
+      'contact_person': _contactPersonController.text.isEmpty ? null : _contactPersonController.text,
       'customer_group': _customerGroupController.text,
-      'customer_type':
-          _customerTypeController
-              .text, // This field is from the "original" form
+      'customer_type': _customerTypeController.text, // This field is from the "original" form
       'lot_type': _lotTypeController.text,
       // Fields from the "detailed" form structure
       'email': _emailController.text.isEmpty ? null : _emailController.text,
-      'phone':
-          _phoneController.text.isEmpty
-              ? null
-              : _phoneController.text, // General phone
-      'payment_term':
-          _paymentTermController.text.isEmpty
-              ? null
-              : _paymentTermController.text,
-      'max_discount':
-          _maxDiscountController.text.isEmpty
-              ? null
-              : _maxDiscountController.text,
-      'segment':
-          _segmentController.text.isEmpty ? null : _segmentController.text,
-      'payment_type':
-          _paymentTypeDetailController.text.isEmpty
-              ? null
-              : _paymentTypeDetailController.text,
+      'phone': _phoneController.text.isEmpty ? null : _phoneController.text, // General phone
+      'payment_term': _paymentTermController.text.isEmpty ? null : _paymentTermController.text,
+      'max_discount': _maxDiscountController.text.isEmpty ? null : _maxDiscountController.text,
+      'segment': _segmentController.text.isEmpty ? null : _segmentController.text,
+      'payment_type': _paymentTypeDetailController.text.isEmpty ? null : _paymentTypeDetailController.text,
       // 'name' and 'address' (general fields from Customer model) are not explicitly in this form's controllers.
       // If they need to be sent, you might need to add controllers or derive them.
     };
@@ -204,10 +161,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
     try {
       if (_isEditMode && widget.customer?.id != null) {
         // Update existing customer
-        response = await _api.updateCustomer(
-          widget.customer!.id!,
-          customerData,
-        );
+        response = await _api.updateCustomer(widget.customer!.id!, customerData);
       } else {
         // Create new customer
         response = await _api.createCustomer(customerData);
@@ -217,8 +171,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
         _isLoading = false;
       });
 
-      if (response != null &&
-          (response['error'] != true && response['message'] != null)) {
+      if (response != null && (response['error'] != true && response['message'] != null)) {
         // The Laravel API returns a map like {'status': 200, 'message': '...', 'data': {...}}
         // So we check if response['data'] exists and is not null for success.
         // Or if the message indicates success.
@@ -226,23 +179,16 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
           SnackBar(
             content: Text(
               response['message'] ??
-                  (_isEditMode
-                      ? 'Customer updated successfully!'
-                      : 'Customer created successfully!'),
+                  (_isEditMode ? 'Customer updated successfully!' : 'Customer created successfully!'),
             ),
             backgroundColor: Colors.green,
           ),
         );
-        Get.back(
-          result: true,
-        ); // Pop and indicate success to refresh list on previous page
+        Get.back(result: true); // Pop and indicate success to refresh list on previous page
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              response?['message']?.toString() ??
-                  'An error occurred. Please try again.',
-            ),
+            content: Text(response?['message']?.toString() ?? 'An error occurred. Please try again.'),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -252,10 +198,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('An application error occurred: ${e.toString()}'),
-          backgroundColor: Colors.redAccent,
-        ),
+        SnackBar(content: Text('An application error occurred: ${e.toString()}'), backgroundColor: Colors.redAccent),
       );
     }
   }
@@ -268,7 +211,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditMode ? 'Edit Customer' : 'Add New Customer'),
+        title: Text(_isEditMode ? 'Edit Customxer' : 'Add New Customer'),
         // backgroundColor: theme.appBarTheme.backgroundColor ?? theme.primaryColor, // Use themed AppBar color
       ),
       body: Padding(
@@ -288,8 +231,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
                       prefixIcon: Icons.qr_code_scanner_outlined,
                       textInputAction: TextInputAction.next,
                       decorationTheme: inputDecorationTheme,
-                      readOnly:
-                          _isEditMode, // Customer code might be non-editable in edit mode
+                      readOnly: _isEditMode, // Customer code might be non-editable in edit mode
                     ),
                   ),
                   if (!_isEditMode) ...[
@@ -302,22 +244,13 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
                           // Logic for generating new customer code (simulated)
                           _customerCodeController.text =
                               "CUST-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}";
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'New Customer Code generated (simulated).',
-                              ),
-                            ),
-                          );
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(const SnackBar(content: Text('New Customer Code generated (simulated).')));
                         },
                         child: const Text('New'),
                         style: theme.elevatedButtonTheme.style?.copyWith(
-                          padding: MaterialStateProperty.all(
-                            const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 15,
-                            ),
-                          ),
+                          padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 20, vertical: 15)),
                         ),
                       ),
                     ),
@@ -551,16 +484,9 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
         // Uses theme by default if decorationTheme is null or properties are not overridden
         labelText: labelText,
         prefixIcon:
-            prefixIcon != null
-                ? Icon(
-                  prefixIcon,
-                  color: decorationTheme?.prefixIconColor ?? Colors.grey[600],
-                )
-                : null,
+            prefixIcon != null ? Icon(prefixIcon, color: decorationTheme?.prefixIconColor ?? Colors.grey[600]) : null,
         // Apply specific parts of the theme or use defaults
-        border:
-            decorationTheme?.border ??
-            OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+        border: decorationTheme?.border ?? OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
         enabledBorder:
             decorationTheme?.enabledBorder ??
             OutlineInputBorder(
@@ -571,16 +497,11 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             decorationTheme?.focusedBorder ??
             OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(
-                color: Theme.of(context).primaryColor,
-                width: 2.0,
-              ),
+              borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2.0),
             ),
         filled: decorationTheme?.filled ?? true,
         fillColor: decorationTheme?.fillColor ?? Colors.grey[50],
-        contentPadding:
-            decorationTheme?.contentPadding ??
-            const EdgeInsets.symmetric(vertical: 15.0, horizontal: 12.0),
+        contentPadding: decorationTheme?.contentPadding ?? const EdgeInsets.symmetric(vertical: 15.0, horizontal: 12.0),
       ),
       keyboardType: keyboardType,
       readOnly: readOnly,
@@ -591,8 +512,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             // Default "not empty" validation, but only if labelText doesn't indicate optionality
             // and the field is not readOnly.
             if (!readOnly && (value == null || value.trim().isEmpty)) {
-              if (labelText.contains('(Optional)') ||
-                  labelText.endsWith('*') == false) {
+              if (labelText.contains('(Optional)') || labelText.endsWith('*') == false) {
                 // If not marked as optional and not required
                 return null; // Allow empty if not explicitly required
               }

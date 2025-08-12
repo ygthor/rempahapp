@@ -55,14 +55,10 @@ class _CustomerListPageState extends State<CustomerListPage> {
       aLog(responseMap);
 
       if (responseMap == null) {
-        _errorMessage =
-            'Failed to connect to the server. Please check your connection.';
+        _errorMessage = 'Failed to connect to the server. Please check your connection.';
       } else if (responseMap['error'] == true) {
-        _errorMessage =
-            responseMap['message']?.toString() ??
-            'An unknown API error occurred.';
-      } else if (responseMap.containsKey('data') &&
-          responseMap['data'] is List) {
+        _errorMessage = responseMap['message']?.toString() ?? 'An unknown API error occurred.';
+      } else if (responseMap.containsKey('data') && responseMap['data'] is List) {
         final List<dynamic> customerDataList = responseMap['data'];
         _customers =
             customerDataList
@@ -75,15 +71,11 @@ class _CustomerListPageState extends State<CustomerListPage> {
                       return null; // Skip this item if parsing fails
                     }
                   } else {
-                    print(
-                      "Skipping invalid item in customer list (not a Map): $data",
-                    );
+                    print("Skipping invalid item in customer list (not a Map): $data");
                     return null; // Skip items that are not maps
                   }
                 })
-                .whereType<
-                  Customer
-                >() // Filter out any nulls from parsing errors
+                .whereType<Customer>() // Filter out any nulls from parsing errors
                 .toList();
         _filteredCustomers = _customers;
       }
@@ -123,24 +115,15 @@ class _CustomerListPageState extends State<CustomerListPage> {
         _filteredCustomers =
             _customers.where((customer) {
               // Use null-aware operators and provide default empty string for toLowerCase
-              final companyMatch =
-                  customer.companyName?.toLowerCase().contains(query) ?? false;
-              final codeMatch =
-                  customer.customerCode?.toLowerCase().contains(query) ?? false;
-              final contactMatch =
-                  customer.contactPerson?.toLowerCase().contains(query) ??
-                  false;
+              final companyMatch = customer.companyName?.toLowerCase().contains(query) ?? false;
+              final codeMatch = customer.customerCode?.toLowerCase().contains(query) ?? false;
+              final contactMatch = customer.contactPerson?.toLowerCase().contains(query) ?? false;
               final phoneMatch =
                   customer.telephone1?.contains(query) ??
                   false; // .contains works on String? directly if query is not empty
-              final emailMatch =
-                  customer.email?.toLowerCase().contains(query) ?? false;
+              final emailMatch = customer.email?.toLowerCase().contains(query) ?? false;
 
-              return companyMatch ||
-                  codeMatch ||
-                  contactMatch ||
-                  phoneMatch ||
-                  emailMatch;
+              return companyMatch || codeMatch || contactMatch || phoneMatch || emailMatch;
             }).toList();
       }
     });
@@ -161,10 +144,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
     }
   }
 
-  Future<void> _viewCustomerDetails(
-    BuildContext context,
-    Customer customer,
-  ) async {
+  Future<void> _viewCustomerDetails(BuildContext context, Customer customer) async {
     // Make it async
     // Navigate to CustomerDetailPage, passing the customer data.
     // Await the result when CustomerDetailPage is popped.
@@ -182,14 +162,9 @@ class _CustomerListPageState extends State<CustomerListPage> {
       builder: (BuildContext ctx) {
         return AlertDialog(
           title: const Text('Confirm Delete'),
-          content: Text(
-            'Are you sure you want to delete ${customer.companyName ?? customer.name ?? 'this customer'}?',
-          ),
+          content: Text('Are you sure you want to delete ${customer.companyName ?? customer.name ?? 'this customer'}?'),
           actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.of(ctx).pop(false),
-            ),
+            TextButton(child: const Text('Cancel'), onPressed: () => Navigator.of(ctx).pop(false)),
             TextButton(
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Delete'),
@@ -203,10 +178,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
     if (confirm == true) {
       if (customer.id == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cannot delete customer: ID is missing.'),
-            backgroundColor: Colors.orange,
-          ),
+          const SnackBar(content: Text('Cannot delete customer: ID is missing.'), backgroundColor: Colors.orange),
         );
         return;
       }
@@ -219,13 +191,10 @@ class _CustomerListPageState extends State<CustomerListPage> {
       });
 
       if (response != null &&
-          (response['success'] == true ||
-              response['message'] == 'Customer deleted successfully.')) {
+          (response['success'] == true || response['message'] == 'Customer deleted successfully.')) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '${customer.companyName ?? customer.name ?? 'Customer'} deleted successfully.',
-            ),
+            content: Text('${customer.companyName ?? customer.name ?? 'Customer'} deleted successfully.'),
             backgroundColor: Colors.green,
           ),
         );
@@ -233,9 +202,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Failed to delete: ${response?['message'] ?? 'Unknown API error'}',
-            ),
+            content: Text('Failed to delete: ${response?['message'] ?? 'Unknown API error'}'),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -265,16 +232,10 @@ class _CustomerListPageState extends State<CustomerListPage> {
               decoration: InputDecoration(
                 hintText: 'Search by Company, Code, Contact, Email...',
                 prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
-                  borderSide: BorderSide.none,
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(25.0), borderSide: BorderSide.none),
                 filled: true,
                 fillColor: Colors.grey[200],
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 0,
-                  horizontal: 20,
-                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
               ),
             ),
           ),
@@ -291,10 +252,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                           children: [
                             Text(
                               _errorMessage,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 16,
-                              ),
+                              style: const TextStyle(color: Colors.red, fontSize: 16),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 10),
@@ -313,10 +271,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                         _searchController.text.isEmpty
                             ? 'No customers found. Pull down to refresh or add one.'
                             : 'No results for "${_searchController.text}".',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey,
-                        ),
+                        style: const TextStyle(fontSize: 18, color: Colors.grey),
                         textAlign: TextAlign.center,
                       ),
                     )
@@ -328,43 +283,22 @@ class _CustomerListPageState extends State<CustomerListPage> {
                           final customer = _filteredCustomers[index];
                           return Card(
                             elevation: 2.0,
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 10.0,
-                              vertical: 6.0,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
+                            margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
                             child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20.0,
-                                vertical: 10.0,
-                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
                               leading: CircleAvatar(
-                                backgroundColor:
-                                    Theme.of(
-                                      context,
-                                    ).colorScheme.primaryContainer,
+                                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                                 child: Text(
                                   customer.companyName?.isNotEmpty == true
                                       ? customer.companyName![0].toUpperCase()
-                                      : (customer.name?.isNotEmpty == true
-                                          ? customer.name![0].toUpperCase()
-                                          : "C"),
-                                  style: TextStyle(
-                                    color:
-                                        Theme.of(
-                                          context,
-                                        ).colorScheme.onPrimaryContainer,
-                                  ),
+                                      : (customer.name?.isNotEmpty == true ? customer.name![0].toUpperCase() : "C"),
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer),
                                 ),
                               ),
                               title: Text(
                                 customer.companyName ?? customer.name ?? 'N/A',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                               ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,21 +306,14 @@ class _CustomerListPageState extends State<CustomerListPage> {
                                   const SizedBox(height: 4),
                                   Text(
                                     "Code: ${customer.customerCode ?? 'N/A'}",
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontSize: 13,
-                                    ),
+                                    style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
                                   ),
-                                  if (customer.contactPerson?.isNotEmpty ==
-                                      true)
+                                  if (customer.contactPerson?.isNotEmpty == true)
                                     Padding(
                                       padding: const EdgeInsets.only(top: 2.0),
                                       child: Text(
                                         "Contact: ${customer.contactPerson}",
-                                        style: TextStyle(
-                                          color: Colors.grey.shade600,
-                                          fontSize: 13,
-                                        ),
+                                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                                       ),
                                     ),
                                   if (customer.telephone1?.isNotEmpty == true)
@@ -394,10 +321,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                                       padding: const EdgeInsets.only(top: 2.0),
                                       child: Text(
                                         "Tel: ${customer.telephone1}",
-                                        style: TextStyle(
-                                          color: Colors.grey.shade600,
-                                          fontSize: 13,
-                                        ),
+                                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                                       ),
                                     ),
                                   if (customer.email?.isNotEmpty == true)
@@ -405,10 +329,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                                       padding: const EdgeInsets.only(top: 2.0),
                                       child: Text(
                                         "Email: ${customer.email}",
-                                        style: TextStyle(
-                                          color: Colors.grey.shade600,
-                                          fontSize: 13,
-                                        ),
+                                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                                       ),
                                     ),
                                 ],
@@ -424,9 +345,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                                     _viewCustomerDetails(context, customer);
                                 },
                                 itemBuilder:
-                                    (
-                                      BuildContext context,
-                                    ) => <PopupMenuEntry<String>>[
+                                    (BuildContext context) => <PopupMenuEntry<String>>[
                                       const PopupMenuItem<String>(
                                         value: 'details',
                                         child: ListTile(
@@ -436,29 +355,18 @@ class _CustomerListPageState extends State<CustomerListPage> {
                                       ),
                                       const PopupMenuItem<String>(
                                         value: 'edit',
-                                        child: ListTile(
-                                          leading: Icon(Icons.edit_outlined),
-                                          title: Text('Edit'),
-                                        ),
+                                        child: ListTile(leading: Icon(Icons.edit_outlined), title: Text('Edit')),
                                       ),
                                       const PopupMenuItem<String>(
                                         value: 'delete',
                                         child: ListTile(
-                                          leading: Icon(
-                                            Icons.delete_outline,
-                                            color: Colors.redAccent,
-                                          ),
-                                          title: Text(
-                                            'Delete',
-                                            style: TextStyle(
-                                              color: Colors.redAccent,
-                                            ),
-                                          ),
+                                          leading: Icon(Icons.delete_outline, color: Colors.redAccent),
+                                          title: Text('Delete', style: TextStyle(color: Colors.redAccent)),
                                         ),
                                       ),
                                     ],
                               ),
-                              onTap: () => _editCustomer(context, customer),
+                              onTap: () => _viewCustomerDetails(context, customer),
                             ),
                           );
                         },

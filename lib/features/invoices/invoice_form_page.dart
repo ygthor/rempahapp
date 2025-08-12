@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:rempahapp/models/customer.dart';
 import 'package:rempahapp/models/invoice.dart';
 import 'package:rempahapp/models/ar_trans_item.dart';
 import 'package:rempahapp/models/global_state.dart';
@@ -19,18 +20,6 @@ class ApiProduct {
 
   factory ApiProduct.fromJson(Map<String, dynamic> json) {
     return ApiProduct(DESP: json['DESP'] as String? ?? 'Unknown Product', ITEMNO: json['ITEMNO'] as String? ?? '');
-  }
-}
-
-// Customer model for selection
-class Customer {
-  final String? customerCode;
-  final String? name;
-
-  Customer({required this.customerCode, this.name});
-
-  factory Customer.fromJson(Map<String, dynamic> json) {
-    return Customer(customerCode: json['customer_code'] as String?, name: json['name'] as String?);
   }
 }
 

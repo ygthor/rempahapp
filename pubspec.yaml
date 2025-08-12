@@ -54,6 +54,7 @@ dependencies:
   flutter_html: ^3.0.0
   flutter_widget_from_html: ^0.16.0
   intl: 
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:
