@@ -1,4 +1,4 @@
-package com.example.rempahapp
+package com.cusvent.kbsapp
 
 import io.flutter.embedding.android.FlutterActivity
 
