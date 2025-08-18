@@ -591,7 +591,7 @@ class ApiV1 {
   /// Creates a new item and adds it to an existing invoice.
   Future<Map<String, dynamic>?> createInvoiceItem(Map<String, dynamic> itemData) async {
     // The endpoint for managing individual items
-    Uri actionUrl = _parseUri('/api/invoice-items');
+    Uri actionUrl = _parseUri('/api/invoices-items');
     try {
       final response = await _httpPost(actionUrl, body: itemData);
       return _handleResponse(response);
@@ -603,7 +603,7 @@ class ApiV1 {
 
   /// Deletes an item from an invoice.
   Future<Map<String, dynamic>?> deleteInvoiceItem(int itemId) async {
-    Uri actionUrl = _parseUri('/api/invoice-items/$itemId');
+    Uri actionUrl = _parseUri('/api/invoices-items/$itemId');
     try {
       final response = await _httpDelete(actionUrl);
       // Handle successful empty response for deletes

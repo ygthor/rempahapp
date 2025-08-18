@@ -65,6 +65,12 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
   bool get _isEditMode => _invoice != null;
   Invoice? _invoice;
 
+  // NEW: Add a state variable for the selected invoice type
+  String? _selectedInvoiceType;
+
+  // NEW: Define the available invoice type options
+  final Map<String, String> _invoiceTypeOptions = {'INV': 'Invoice', 'CB': 'Cash Bill', 'CN': 'Credit Note'};
+
   @override
   void initState() {
     super.initState();
@@ -79,9 +85,15 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
     _dateController.text = DateFormat('yyyy-MM-dd').format(_selectedDate!);
 
     if (_isEditMode && _invoice != null) {
+      // MODIFIED: In edit mode, set the type from the existing invoice data
+      _selectedInvoiceType = _invoice!.type;
+
       Future.delayed(Duration.zero, () async {
         await _fetchInvoice();
       });
+    } else {
+      // MODIFIED: In create mode, set a default type
+      _selectedInvoiceType = 'INV'; // Default to 'Invoice'
     }
   }
 
@@ -244,8 +256,8 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
     Get.back(); // Close the modal sheet first
 
     final body = {
-      "artran_id": _invoice!.id, // Required for create
-      "product_id": _selectedApiProduct!.ITEMNO.toString(),
+      "reference_code": _invoice!.refNo, // Required for create
+      "product_code": _selectedApiProduct!.ITEMNO.toString(),
       "quantity": quantity,
       "unit_price": unitPrice,
     };
@@ -294,7 +306,14 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
       return;
     }
 
+    // NEW: Add validation for invoice type
+    if (_selectedInvoiceType == null) {
+      showVDialog(title: "Validation Error", text: "Please select an invoice type.");
+      return;
+    }
+
     setState(() => _isLoading = true);
+    showVDialog(title: "CUSTOM", text: _selectedCustomer!.customerCode);
 
     Map<String, dynamic> invoiceData = {
       'type': _typeController.text,
@@ -319,113 +338,159 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
       final Map<String, dynamic>? response;
       if (_isEditMode) {
         invoiceData.remove('items'); // Items are managed separately in edit mode
-        response = await _api.updateInvoice(_invoice!.refNo, invoiceData);
+        response = await _api.updateInvoice(_invoice!.refNo!, invoiceData);
       } else {
         response = await _api.createInvoice(invoiceData);
       }
 
-      // ... (Handle success/error response from API)
+      // --- MODIFIED: Added comprehensive error handling ---
 
-      if (response != null && response['data'] is Map) {
-        await showVDialog(title: "Success", text: response['message'] ?? "Success", type: 'success');
-        final newInvoice = Invoice.fromJson(response['data']);
-        if (!_isEditMode) {
-          // In create mode, navigate to the edit page of the newly created invoice
-          Get.off(() => InvoiceFormPage(invoice: newInvoice));
+      if (response == null) {
+        // Handle cases where the server is unreachable or returns nothing
+        showVDialog(title: "Error", text: "No response from server. Please check your connection.");
+      } else {
+        // Safely extract response data
+        final bool hasError = response['error'] == 1 || response['error'] == true;
+        final int status = response['status'] as int? ?? 0; // Default to 0 if status is missing
+        final String message = response['message']?.toString() ?? "An unknown error occurred.";
+
+        if (!hasError && isSuccessCode(status) && response['data'] is Map<String, dynamic>) {
+          // This is the original success path
+          await showVDialog(title: "Success", text: message, type: 'success');
+
+          final newInvoice = Invoice.fromJson(response['data'] as Map<String, dynamic>);
+
+          if (!_isEditMode) {
+            // In create mode, navigate to the edit page of the newly created invoice
+            // Using Get.off ensures the user can't go back to the now-obsolete create form.
+            Get.off(() => InvoiceFormPage(invoice: newInvoice));
+          } else {
+            // In edit mode, just reload the data to show any server-side updates
+            setState(() {
+              _invoice = newInvoice;
+            });
+            // Use a separate await to ensure the state is set before loading details
+            await _loadInvoiceDetails();
+          }
         } else {
-          // In edit mode, just reload the data
-          setState(() {
-            _invoice = newInvoice;
-            _loadInvoiceDetails();
-          });
+          // NEW: This block handles API-level errors (e.g., status 404, 500, validation error)
+          showVDialog(title: "Operation Failed", text: "Error (Status $status): $message");
         }
       }
+    } catch (e) {
+      // This existing catch block handles exceptions like parsing errors or other unexpected issues
+      aLog("Exception during submit invoice: $e");
+      showVDialog(title: "Application Error", text: "An unexpected error occurred: ${e.toString()}");
     } finally {
-      setState(() => _isLoading = false);
+      // This ensures the loading indicator is always hidden after the operation completes
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   // Updated to fetch and allow selection of a customer
-  Future<void> _showCustomerSelectionDialog() async {
-    setState(() {
-      _isLoadingCustomers = true;
-    });
-    List<Customer> fetchedCustomers = [];
-    String? fetchError;
+  // Future<void> _showCustomerSelectionDialog() async {
+  //   setState(() {
+  //     _isLoadingCustomers = true;
+  //   });
+  //   List<Customer> fetchedCustomers = [];
+  //   String? fetchError;
 
-    try {
-      // Assuming ApiV1.getCustomers() returns your makeResponse structure:
-      // {"error":0, "status":200, "message":"...", "data":[CUSTOMER_LIST]}
-      final dynamic response = await _api.getCustomers(); // Use the method name you provided
-      aLog("Fetched Customers Response: $response");
+  //   try {
+  //     // Assuming ApiV1.getCustomers() returns your makeResponse structure:
+  //     // {"error":0, "status":200, "message":"...", "data":[CUSTOMER_LIST]}
+  //     final dynamic response = await _api.getCustomers(); // Use the method name you provided
+  //     aLog("Fetched Customers Response: $response");
 
-      if (response != null && response is Map<String, dynamic>) {
-        bool hasError = response['error'] == 1 || response['error'] == true;
-        int status = response['status'] as int? ?? 0;
+  //     if (response != null && response is Map<String, dynamic>) {
+  //       bool hasError = response['error'] == 1 || response['error'] == true;
+  //       int status = response['status'] as int? ?? 0;
 
-        if (!hasError && (status >= 200 && status < 300) && response['data'] is List) {
-          final List<dynamic> customerDataList = response['data'];
-          fetchedCustomers = customerDataList.map((data) => Customer.fromJson(data as Map<String, dynamic>)).toList();
-        } else {
-          fetchError = response['message']?.toString() ?? "Failed to fetch customers.";
-        }
-      } else if (response is List) {
-        // Fallback if API returns list directly
-        fetchedCustomers = response.map((data) => Customer.fromJson(data as Map<String, dynamic>)).toList();
-      } else {
-        fetchError = "Invalid response format from customer API.";
-      }
-    } catch (e) {
-      fetchError = "Error fetching customers: $e";
-    } finally {
-      setState(() {
-        _isLoadingCustomers = false;
-      });
-    }
+  //       if (!hasError && (status >= 200 && status < 300) && response['data'] is List) {
+  //         final List<dynamic> customerDataList = response['data'];
+  //         fetchedCustomers = customerDataList.map((data) => Customer.fromJson(data as Map<String, dynamic>)).toList();
+  //       } else {
+  //         fetchError = response['message']?.toString() ?? "Failed to fetch customers.";
+  //       }
+  //     } else if (response is List) {
+  //       // Fallback if API returns list directly
+  //       fetchedCustomers = response.map((data) => Customer.fromJson(data as Map<String, dynamic>)).toList();
+  //     } else {
+  //       fetchError = "Invalid response format from customer API.";
+  //     }
+  //   } catch (e) {
+  //     fetchError = "Error fetching customers: $e";
+  //   } finally {
+  //     setState(() {
+  //       _isLoadingCustomers = false;
+  //     });
+  //   }
 
-    if (fetchError != null) {
-      showVDialog(title: "Error Loading Customers", text: fetchError);
-      return;
-    }
+  //   if (fetchError != null) {
+  //     showVDialog(title: "Error Loading Customers", text: fetchError);
+  //     return;
+  //   }
 
-    if (fetchedCustomers.isEmpty) {
-      showVDialog(title: "No Customers", text: "No customers found to select.");
-      return;
-    }
+  //   if (fetchedCustomers.isEmpty) {
+  //     showVDialog(title: "No Customers", text: "No customers found to select.");
+  //     return;
+  //   }
 
-    // --- Actual Dialog for Selection ---
-    // This is a simplified dialog. You might want a more sophisticated searchable list.
-    final Customer? selected = await Get.dialog<Customer>(
-      AlertDialog(
-        title: const Text('Select Customer'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child:
-              _isLoadingCustomers
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: fetchedCustomers.length,
-                    itemBuilder: (context, index) {
-                      final customer = fetchedCustomers[index];
-                      return ListTile(
-                        title: Text(customer.name ?? customer.name ?? 'Unnamed Customer'),
-                        subtitle: Text(customer.customerCode ?? 'ID: ${customer.customerCode}'),
-                        onTap: () {
-                          Get.back(result: customer); // Return the selected customer
-                        },
-                      );
-                    },
-                  ),
-        ),
-        actions: [TextButton(onPressed: () => Get.back(), child: const Text('Cancel'))],
-      ),
+  //   // --- Actual Dialog for Selection ---
+  //   // This is a simplified dialog. You might want a more sophisticated searchable list.
+  //   final Customer? selected = await Get.dialog<Customer>(
+  //     AlertDialog(
+  //       title: const Text('Select Customer'),
+  //       content: SizedBox(
+  //         width: double.maxFinite,
+  //         child:
+  //             _isLoadingCustomers
+  //                 ? const Center(child: CircularProgressIndicator())
+  //                 : ListView.builder(
+  //                   shrinkWrap: true,
+  //                   itemCount: fetchedCustomers.length,
+  //                   itemBuilder: (context, index) {
+  //                     final customer = fetchedCustomers[index];
+  //                     return ListTile(
+  //                       title: Text(customer.name ?? customer.name ?? 'Unnamed Customer'),
+  //                       subtitle: Text(customer.customerCode ?? 'ID: ${customer.customerCode}'),
+  //                       onTap: () {
+  //                         Get.back(result: customer); // Return the selected customer
+  //                       },
+  //                     );
+  //                   },
+  //                 ),
+  //       ),
+  //       actions: [TextButton(onPressed: () => Get.back(), child: const Text('Cancel'))],
+  //     ),
+  //   );
+
+  //   if (selected != null) {
+  //     setState(() {
+  //       _selectedCustomer = selected;
+  //       _customerDisplayController.text = selected.name ?? selected.name ?? 'ID: ${selected.customerCode}';
+  //     });
+  //   }
+  // }
+
+  Future<void> _showCustomerSelectionSheet() async {
+    // Hide keyboard if it's open
+    FocusScope.of(context).unfocus();
+
+    final Customer? selected = await showModalBottomSheet<Customer>(
+      context: context,
+      isScrollControlled: true, // Important for the modal to resize when the keyboard appears
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (context) {
+        return const _CustomerSelectionSheet();
+      },
     );
 
     if (selected != null) {
       setState(() {
         _selectedCustomer = selected;
-        _customerDisplayController.text = selected.name ?? selected.name ?? 'ID: ${selected.customerCode}';
+        _customerDisplayController.text = selected.name ?? 'ID: ${selected.customerCode}';
       });
     }
   }
@@ -475,7 +540,7 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
     if (_currentIndex == 0) {
       return FloatingActionButton.extended(
         onPressed: _submitInvoice,
-        label: Text(_isEditMode ? 'Update Invoice' : 'Create Invoice & Add Items'),
+        label: Text(_isEditMode ? 'Update Invoice' : 'Create Invoice'),
         icon: Icon(Icons.check),
       );
     } else if (_currentIndex == 1) {
@@ -506,9 +571,7 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // --- ADDED: The missing fields are now here ---
-
-                  // Reference No Field
+                  // Reference No Field (existing)
                   TextFormField(
                     controller: _referenceNoController,
                     readOnly: true,
@@ -520,9 +583,47 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
                   ),
                   const SizedBox(height: 16),
 
+                  // NEW: Invoice Type Dropdown
+                  if (!_isEditMode)
+                    DropdownButtonFormField<String>(
+                      value: _selectedInvoiceType,
+                      decoration: const InputDecoration(
+                        labelText: 'Type',
+                        prefixIcon: Icon(FontAwesomeIcons.fileInvoice),
+                        border: OutlineInputBorder(),
+                      ),
+                      // Disable the dropdown in edit mode
+                      onChanged:
+                          _isEditMode
+                              ? null
+                              : (String? newValue) {
+                                setState(() {
+                                  _selectedInvoiceType = newValue;
+                                });
+                              },
+                      items:
+                          _invoiceTypeOptions.entries.map((MapEntry<String, String> entry) {
+                            return DropdownMenuItem<String>(value: entry.key, child: Text(entry.value));
+                          }).toList(),
+                      validator: (value) => value == null ? 'Please select an invoice type' : null,
+                    ),
+
+                  if (_isEditMode)
+                    TextFormField(
+                      controller: _typeController,
+                      readOnly: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Type',
+                        prefixIcon: Icon(FontAwesomeIcons.layerGroup),
+                        filled: true,
+                      ),
+                    ),
+
+                  const SizedBox(height: 16),
+
                   // Customer Selection Field
                   InkWell(
-                    onTap: _showCustomerSelectionDialog,
+                    onTap: _showCustomerSelectionSheet,
                     child: IgnorePointer(
                       child: TextFormField(
                         controller: _customerDisplayController,
@@ -848,6 +949,147 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
       readOnly: readOnly,
       style: textStyle,
       onTap: readOnly ? onTap : null, // Only use onTap if readOnly
+    );
+  }
+}
+
+// NEW: A dedicated widget for the customer selection bottom sheet
+class _CustomerSelectionSheet extends StatefulWidget {
+  const _CustomerSelectionSheet();
+
+  @override
+  State<_CustomerSelectionSheet> createState() => _CustomerSelectionSheetState();
+}
+
+class _CustomerSelectionSheetState extends State<_CustomerSelectionSheet> {
+  late ApiV1 _api;
+  final TextEditingController _searchController = TextEditingController();
+
+  // State variables for this widget
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<Customer> _allCustomers = [];
+  List<Customer> _filteredCustomers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    GlobalState gs = Get.find<GlobalState>();
+    _api = ApiV1(bearerToken: gs.token);
+
+    _fetchCustomers();
+
+    // Add a listener to the search controller to filter the list on text change
+    _searchController.addListener(_filterCustomers);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_filterCustomers);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchCustomers() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final dynamic response = await _api.getCustomers();
+      if (response != null && response is Map<String, dynamic> && response['data'] is List) {
+        final List<dynamic> customerDataList = response['data'];
+        _allCustomers = customerDataList.map((data) => Customer.fromJson(data as Map<String, dynamic>)).toList();
+        _filteredCustomers = _allCustomers; // Initially, show all customers
+      } else {
+        _errorMessage = response?['message']?.toString() ?? "Failed to fetch customers in an expected format.";
+      }
+    } catch (e) {
+      _errorMessage = "An error occurred: ${e.toString()}";
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _filterCustomers() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredCustomers = _allCustomers;
+      } else {
+        _filteredCustomers =
+            _allCustomers.where((customer) {
+              final nameMatches = customer.name?.toLowerCase().contains(query) ?? false;
+              final codeMatches = customer.customerCode?.toLowerCase().contains(query) ?? false;
+              return nameMatches || codeMatches;
+            }).toList();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      // This padding handles the space for the on-screen keyboard
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.75, // Take up 75% of screen height
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Select Customer', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _searchController,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'Search by name or code',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                suffixIcon:
+                    _searchController.text.isNotEmpty
+                        ? IconButton(icon: const Icon(Icons.clear), onPressed: () => _searchController.clear())
+                        : null,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(child: _buildCustomerList()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomerList() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_errorMessage != null) {
+      return Center(child: Text('Error: $_errorMessage', style: const TextStyle(color: Colors.red)));
+    }
+    if (_filteredCustomers.isEmpty) {
+      return const Center(child: Text('No customers found.'));
+    }
+
+    return ListView.builder(
+      itemCount: _filteredCustomers.length,
+      itemBuilder: (context, index) {
+        final customer = _filteredCustomers[index];
+        return ListTile(
+          title: Text(customer.name ?? 'Unnamed Customer'),
+          subtitle: Text(customer.customerCode ?? 'No Code'),
+          onTap: () {
+            // When a customer is tapped, pop the modal and return the selected customer object
+            Navigator.of(context).pop(customer);
+          },
+        );
+      },
     );
   }
 }

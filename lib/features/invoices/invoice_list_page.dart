@@ -458,6 +458,9 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
 // NOTE: The FilterOptions widget also needs to be adapted to handle invoice types.
 // I've made the necessary changes below.
 
+// NOTE: The FilterOptions widget also needs to be adapted to handle invoice types.
+// I've made the necessary changes below.
+
 // CHANGED: Create a new widget for your filter options
 class FilterOptions extends StatefulWidget {
   final String initialSearchQuery;
@@ -486,6 +489,9 @@ class _FilterOptionsState extends State<FilterOptions> {
   // CHANGED: State for invoice types
   late List<String> _tempSelectedInvoiceTypes;
 
+  // NEW: A map to define the invoice types and their display names
+  final Map<String, String> _invoiceTypeOptions = {'INV': 'Invoice', 'CB': 'Cash Bill', 'CN': 'Credit Note'};
+
   @override
   void initState() {
     super.initState();
@@ -500,6 +506,25 @@ class _FilterOptionsState extends State<FilterOptions> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: (isStartDate ? _tempStartDate : _tempEndDate) ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isStartDate) {
+          _tempStartDate = picked;
+        } else {
+          // Set to the end of the day for inclusive filtering
+          _tempEndDate = DateTime(picked.year, picked.month, picked.day, 23, 59, 59);
+        }
+      });
+    }
   }
 
   void _applyFilters() {
@@ -527,29 +552,62 @@ class _FilterOptionsState extends State<FilterOptions> {
           // CHANGED: Title
           Text('Filter Invoices', style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 20),
-          // ... (Search and Date fields remain the same)
-          TextField(/* ... */),
+          TextField(
+            controller: _searchController,
+            decoration: const InputDecoration(
+              labelText: 'Search by Customer Name',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
+            ),
+          ),
           const SizedBox(height: 20),
-          ListTile(/* ... Start Date ... */),
-          ListTile(/* ... End Date ... */),
+          ListTile(
+            leading: const Icon(FontAwesomeIcons.calendar),
+            title: const Text('Start Date'),
+            subtitle: Text(_tempStartDate != null ? DateFormat('dd MMM yyyy').format(_tempStartDate!) : 'Not set'),
+            onTap: () => _selectDate(context, true),
+            trailing:
+                _tempStartDate != null
+                    ? IconButton(icon: const Icon(Icons.clear), onPressed: () => setState(() => _tempStartDate = null))
+                    : null,
+          ),
+          ListTile(
+            leading: const Icon(FontAwesomeIcons.calendarCheck),
+            title: const Text('End Date'),
+            subtitle: Text(_tempEndDate != null ? DateFormat('dd MMM yyyy').format(_tempEndDate!) : 'Not set'),
+            onTap: () => _selectDate(context, false),
+            trailing:
+                _tempEndDate != null
+                    ? IconButton(icon: const Icon(Icons.clear), onPressed: () => setState(() => _tempEndDate = null))
+                    : null,
+          ),
           const SizedBox(height: 20),
           // CHANGED: Invoice Type filter
           Text('Invoice Type', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8.0,
-            // CHANGED: Use invoice types like IV, CN, DN
+            runSpacing: 4.0,
+            // CHANGED: Use invoice types from the new map to create filter chip "badges"
             children:
-                ['IV', 'CN', 'DN'].map((type) {
-                  final isSelected = _tempSelectedInvoiceTypes.contains(type);
+                _invoiceTypeOptions.entries.map((entry) {
+                  final typeCode = entry.key;
+                  final typeName = entry.value;
+                  final isSelected = _tempSelectedInvoiceTypes.contains(typeCode);
+
                   return FilterChip(
-                    label: Text(type),
+                    label: Text(typeName),
                     selected: isSelected,
+                    // NEW: Add a checkmark icon to look more like a badge when selected
+                    avatar: isSelected ? const Icon(Icons.check, size: 16) : null,
+                    selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                    checkmarkColor: Theme.of(context).primaryColor,
                     onSelected: (bool selected) {
                       setState(() {
                         if (selected) {
-                          _tempSelectedInvoiceTypes.add(type);
+                          _tempSelectedInvoiceTypes.add(typeCode);
                         } else {
-                          _tempSelectedInvoiceTypes.remove(type);
+                          _tempSelectedInvoiceTypes.remove(typeCode);
                         }
                       });
                     },
@@ -558,7 +616,12 @@ class _FilterOptionsState extends State<FilterOptions> {
           ),
           const SizedBox(height: 20),
           Row(
-            // ... (Buttons remain the same)
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(onPressed: _clearFilters, child: const Text('Clear All')),
+              const SizedBox(width: 8),
+              ElevatedButton(onPressed: _applyFilters, child: const Text('Apply Filters')),
+            ],
           ),
         ],
       ),

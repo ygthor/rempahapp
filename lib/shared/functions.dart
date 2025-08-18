@@ -454,3 +454,12 @@ Future<bool> showConfirmationDialog({
 
   return result == true;
 }
+
+bool isSuccessCode(int statusCode) {
+  if (statusCode >= 200 && statusCode < 300) {
+    // Covers 200, 201, 202, 204, etc.
+    return true;
+  } else {
+    return false;
+  }
+}
