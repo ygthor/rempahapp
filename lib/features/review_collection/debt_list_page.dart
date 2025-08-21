@@ -5,8 +5,8 @@ import 'dart:async'; // For debounce
 
 // Assuming models and services are in these paths
 import 'package:kanesanapp/api/api_v1.dart';
-import 'package:kanesanappp/models/global_state.dart';
-import 'package:kanesanappp/shared/functions.dart';
+import 'package:kanesanapp/models/global_state.dart';
+import 'package:kanesanapp/shared/functions.dart';
 import 'package:get/get.dart';
 
 // --- Data Models (should be in separate files) ---
@@ -62,18 +62,14 @@ class CustomerDebt {
     var itemsFromJson = json['debtItems'] as List<dynamic>?;
     List<DebtItem> parsedItems = [];
     if (itemsFromJson != null) {
-      parsedItems =
-          itemsFromJson
-              .map((item) => DebtItem.fromJson(item as Map<String, dynamic>))
-              .toList();
+      parsedItems = itemsFromJson.map((item) => DebtItem.fromJson(item as Map<String, dynamic>)).toList();
     }
     return CustomerDebt(
       customerCode: json['customerCode'] as String? ?? 'N/A',
       outletsCode: json['outletsCode'] as String? ?? 'N/A',
       companyName: json['companyName'] as String? ?? 'Unknown Customer',
       debtItems: parsedItems,
-      totalOutstandingAmount:
-          (json['totalOutstandingAmount'] as num?)?.toDouble() ?? 0.0,
+      totalOutstandingAmount: (json['totalOutstandingAmount'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
@@ -129,25 +125,16 @@ class _DebtListPageState extends State<DebtListPage> {
     try {
       final response = await _api.getDebts(searchTerm: searchTerm);
       aLog("Fetch on select/submit: $response");
-      if (response != null &&
-          response['error'] != true &&
-          response['data'] is List) {
+      if (response != null && response['error'] != true && response['data'] is List) {
         final List<CustomerDebt> results =
-            (response['data'] as List)
-                .map(
-                  (data) => CustomerDebt.fromJson(data as Map<String, dynamic>),
-                )
-                .toList();
+            (response['data'] as List).map((data) => CustomerDebt.fromJson(data as Map<String, dynamic>)).toList();
 
         if (results.isNotEmpty) {
           // Assuming the first result is the one we want for a specific search
           final customerDebt = results.first;
           setState(() {
             _selectedCustomerDebt = customerDebt;
-            _filteredDebtItems =
-                customerDebt.debtItems
-                    .where((item) => item.outstandingAmount > 0)
-                    .toList();
+            _filteredDebtItems = customerDebt.debtItems.where((item) => item.outstandingAmount > 0).toList();
             _filteredDebtItems.sort((a, b) => a.dueDate.compareTo(b.dueDate));
           });
         } else {
@@ -161,9 +148,7 @@ class _DebtListPageState extends State<DebtListPage> {
         setState(() {
           _selectedCustomerDebt = null;
           _filteredDebtItems = [];
-          _errorMessage =
-              response?['message']?.toString() ??
-              'Failed to load debt information.';
+          _errorMessage = response?['message']?.toString() ?? 'Failed to load debt information.';
         });
       }
     } catch (e) {
@@ -187,23 +172,16 @@ class _DebtListPageState extends State<DebtListPage> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Showing all sales for ${_selectedCustomerDebt!.companyName}',
-          ),
+          content: Text('Showing all sales for ${_selectedCustomerDebt!.companyName}'),
           backgroundColor: Colors.blue,
         ),
       );
     } else {
-      showVDialog(
-        title: "Info",
-        text: "Please search and select a customer first.",
-      );
+      showVDialog(title: "Info", text: "Please search and select a customer first.");
     }
   }
 
-  Future<Iterable<CustomerDebt>> _optionsBuilder(
-    TextEditingValue textEditingValue,
-  ) async {
+  Future<Iterable<CustomerDebt>> _optionsBuilder(TextEditingValue textEditingValue) async {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     if (textEditingValue.text.length < 2) {
       return const Iterable<CustomerDebt>.empty();
@@ -213,15 +191,9 @@ class _DebtListPageState extends State<DebtListPage> {
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       final response = await _api.getDebts(searchTerm: textEditingValue.text);
 
-      if (response != null &&
-          response['error'] != true &&
-          response['data'] is List) {
+      if (response != null && response['error'] != true && response['data'] is List) {
         final List<CustomerDebt> results =
-            (response['data'] as List)
-                .map(
-                  (data) => CustomerDebt.fromJson(data as Map<String, dynamic>),
-                )
-                .toList();
+            (response['data'] as List).map((data) => CustomerDebt.fromJson(data as Map<String, dynamic>)).toList();
 
         completer.complete(results);
       } else {
@@ -244,15 +216,8 @@ class _DebtListPageState extends State<DebtListPage> {
           children: <Widget>[
             Autocomplete<CustomerDebt>(
               optionsBuilder: _optionsBuilder,
-              displayStringForOption:
-                  (CustomerDebt option) =>
-                      '${option.customerCode} - ${option.companyName}',
-              fieldViewBuilder: (
-                context,
-                fieldTextEditingController,
-                fieldFocusNode,
-                onFieldSubmitted,
-              ) {
+              displayStringForOption: (CustomerDebt option) => '${option.customerCode} - ${option.companyName}',
+              fieldViewBuilder: (context, fieldTextEditingController, fieldFocusNode, onFieldSubmitted) {
                 // Keep a reference to the controller if needed outside this builder
                 // For this case, it's self-contained.
 
@@ -270,26 +235,21 @@ class _DebtListPageState extends State<DebtListPage> {
                               icon: const Icon(Icons.clear),
                               onPressed: () {
                                 fieldTextEditingController.clear();
-                                _fetchAndLoadCustomerDebts(
-                                  '',
-                                ); // Clear the list
+                                _fetchAndLoadCustomerDebts(''); // Clear the list
                               },
                             )
                             : null,
                   ),
                   onSubmitted: (String value) {
                     // **THE FIX IS HERE**: Call the correct API fetch method
-                    _fetchAndLoadCustomerDebts(
-                      value.split(' - ')[0],
-                    ); // Try to get code if format is "CODE - NAME"
+                    _fetchAndLoadCustomerDebts(value.split(' - ')[0]); // Try to get code if format is "CODE - NAME"
                     onFieldSubmitted();
                   },
                 );
               },
               onSelected: (CustomerDebt selection) {
                 // When user selects from dropdown, update the list
-                _autocompleteController.text =
-                    '${selection.customerCode} - ${selection.companyName}';
+                _autocompleteController.text = '${selection.customerCode} - ${selection.companyName}';
                 _fetchAndLoadCustomerDebts(selection.customerCode);
                 FocusScope.of(context).unfocus();
               },
@@ -308,10 +268,7 @@ class _DebtListPageState extends State<DebtListPage> {
                           final CustomerDebt option = options.elementAt(index);
                           return InkWell(
                             onTap: () => onSelected(option),
-                            child: ListTile(
-                              title: Text(option.customerCode),
-                              subtitle: Text(option.companyName),
-                            ),
+                            child: ListTile(title: Text(option.customerCode), subtitle: Text(option.companyName)),
                           );
                         },
                       ),
@@ -322,19 +279,9 @@ class _DebtListPageState extends State<DebtListPage> {
             ),
             const SizedBox(height: 16),
             if (_isLoading)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(),
-                ),
-              )
+              const Center(child: Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator()))
             else if (_errorMessage.isNotEmpty)
-              Center(
-                child: Text(
-                  _errorMessage,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              )
+              Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)))
             else if (_selectedCustomerDebt != null) ...[
               Card(
                 elevation: 2,
@@ -343,15 +290,9 @@ class _DebtListPageState extends State<DebtListPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDetailRow(
-                        'Outlets Code:',
-                        _selectedCustomerDebt!.outletsCode,
-                      ),
+                      _buildDetailRow('Outlets Code:', _selectedCustomerDebt!.outletsCode),
                       const SizedBox(height: 4),
-                      _buildDetailRow(
-                        'Company Name:',
-                        _selectedCustomerDebt!.companyName,
-                      ),
+                      _buildDetailRow('Company Name:', _selectedCustomerDebt!.companyName),
                     ],
                   ),
                 ),
@@ -363,9 +304,7 @@ class _DebtListPageState extends State<DebtListPage> {
                   icon: const Icon(FontAwesomeIcons.fileInvoice, size: 16),
                   label: const Text('Review All Sales'),
                   onPressed: _reviewAllSalesForCustomer,
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Theme.of(context).primaryColor),
-                  ),
+                  style: OutlinedButton.styleFrom(side: BorderSide(color: Theme.of(context).primaryColor)),
                 ),
               ),
             ],
@@ -381,62 +320,30 @@ class _DebtListPageState extends State<DebtListPage> {
                     _headerText('P.Type', flex: 1),
                     _headerText('P.Term', flex: 2),
                     _headerText('DueDate', flex: 2),
-                    _headerText(
-                      'OSTD Amt',
-                      flex: 2,
-                      alignment: TextAlign.right,
-                    ),
+                    _headerText('OSTD Amt', flex: 2, alignment: TextAlign.right),
                   ],
                 ),
               ),
             if (_filteredDebtItems.isNotEmpty) const Divider(),
             Expanded(
               child:
-                  _selectedCustomerDebt != null &&
-                          _filteredDebtItems.isEmpty &&
-                          !_isLoading
-                      ? const Center(
-                        child: Text(
-                          'No outstanding debts found for this customer.',
-                        ),
-                      )
+                  _selectedCustomerDebt != null && _filteredDebtItems.isEmpty && !_isLoading
+                      ? const Center(child: Text('No outstanding debts found for this customer.'))
                       : _selectedCustomerDebt == null && !_isLoading
-                      ? const Center(
-                        child: Text(
-                          'Type and select a customer to view debts.',
-                        ),
-                      )
+                      ? const Center(child: Text('Type and select a customer to view debts.'))
                       : ListView.separated(
                         itemCount: _filteredDebtItems.length,
                         itemBuilder: (context, index) {
                           final item = _filteredDebtItems[index];
-                          final bool isOverdue =
-                              item.outstandingAmount > 0 &&
-                              item.dueDate.isBefore(DateTime.now());
+                          final bool isOverdue = item.outstandingAmount > 0 && item.dueDate.isBefore(DateTime.now());
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 6.0),
                             child: Row(
                               children: [
-                                _itemText(
-                                  item.salesNo,
-                                  flex: 2,
-                                  isBold: isOverdue,
-                                ),
-                                _itemText(
-                                  dateFormat.format(item.salesDate),
-                                  flex: 2,
-                                  isBold: isOverdue,
-                                ),
-                                _itemText(
-                                  item.paymentType,
-                                  flex: 1,
-                                  isBold: isOverdue,
-                                ),
-                                _itemText(
-                                  item.paymentTerm,
-                                  flex: 2,
-                                  isBold: isOverdue,
-                                ),
+                                _itemText(item.salesNo, flex: 2, isBold: isOverdue),
+                                _itemText(dateFormat.format(item.salesDate), flex: 2, isBold: isOverdue),
+                                _itemText(item.paymentType, flex: 1, isBold: isOverdue),
+                                _itemText(item.paymentTerm, flex: 2, isBold: isOverdue),
                                 _itemText(
                                   dateFormat.format(item.dueDate),
                                   flex: 2,
@@ -454,8 +361,7 @@ class _DebtListPageState extends State<DebtListPage> {
                             ),
                           );
                         },
-                        separatorBuilder:
-                            (context, index) => const Divider(height: 1),
+                        separatorBuilder: (context, index) => const Divider(height: 1),
                       ),
             ),
             const SizedBox(height: 10),
@@ -467,9 +373,7 @@ class _DebtListPageState extends State<DebtListPage> {
                   children: [
                     Text(
                       'Total OSTD Amount: ',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     Text(
                       '${_selectedCustomerDebt!.totalOutstandingAmount.toStringAsFixed(2)}',
@@ -490,33 +394,19 @@ class _DebtListPageState extends State<DebtListPage> {
   Widget _buildDetailRow(String label, String value) {
     return Row(
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Colors.black54,
-          ),
-        ),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.black54)),
         const SizedBox(width: 8),
         Expanded(child: Text(value, style: const TextStyle(fontSize: 15))),
       ],
     );
   }
 
-  Widget _headerText(
-    String text, {
-    int flex = 1,
-    TextAlign alignment = TextAlign.left,
-  }) {
+  Widget _headerText(String text, {int flex = 1, TextAlign alignment = TextAlign.left}) {
     return Expanded(
       flex: flex,
       child: Text(
         text,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 13,
-          color: Colors.black54,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black54),
         textAlign: alignment,
       ),
     );
@@ -533,11 +423,7 @@ class _DebtListPageState extends State<DebtListPage> {
       flex: flex,
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: 12.5,
-          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-          color: color,
-        ),
+        style: TextStyle(fontSize: 12.5, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: color),
         textAlign: alignment,
       ),
     );

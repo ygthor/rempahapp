@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:kanesanapp/features/init_page.dart';
-import 'package:kanesanappp/models/global_state.dart';
+import 'package:kanesanapp/models/global_state.dart';
 
 import 'shared/ui.dart';
 

@@ -5,9 +5,9 @@ import 'package:intl/intl.dart';
 
 // Assuming these are the correct paths in your project
 import 'package:kanesanapp/api/api_v1.dart';
-import 'package:kanesanappp/models/global_state.dart';
-import 'package:kanesanappp/models/receipt.dart';
-import 'package:kanesanappp/shared/functions.dart'; // For showVDialog
+import 'package:kanesanapp/models/global_state.dart';
+import 'package:kanesanapp/models/receipt.dart';
+import 'package:kanesanapp/shared/functions.dart'; // For showVDialog
 
 // --- Data Models ---
 // Ideally, these would be in their own files (e.g., models/customer.dart, models/receipt.dart)
@@ -23,10 +23,7 @@ class Customer {
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
       id: json['id'] as int,
-      name:
-          json['company_name'] as String? ??
-          json['name'] as String? ??
-          'Unknown Customer',
+      name: json['company_name'] as String? ?? json['name'] as String? ?? 'Unknown Customer',
       customerCode: json['customer_code'] as String? ?? 'N/A',
     );
   }
@@ -58,13 +55,7 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
 
   // --- Dropdown State Variables ---
   String? _selectedPaymentType;
-  final List<String> _paymentTypeOptions = [
-    'Cash',
-    'Cheque',
-    'Online Transfer',
-    'Card',
-    'Other',
-  ];
+  final List<String> _paymentTypeOptions = ['Cash', 'Cheque', 'Online Transfer', 'Card', 'Other'];
   String? _selectedChequeType;
   final List<String> _chequeTypeOptions = ['Local', 'Outstation', 'Post-Dated'];
 
@@ -80,23 +71,15 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
 
     final receipt = widget.receiptToEdit;
 
-    _receiptNoController = TextEditingController(
-      text: receipt?.receiptNo ?? _generateNewReceiptNo(),
-    );
-    _debtAmountController = TextEditingController(
-      text: receipt?.debtAmount!.toStringAsFixed(2) ?? '0.00',
-    );
+    _receiptNoController = TextEditingController(text: receipt?.receiptNo ?? _generateNewReceiptNo());
+    _debtAmountController = TextEditingController(text: receipt?.debtAmount!.toStringAsFixed(2) ?? '0.00');
     _transactionAmountController = TextEditingController(
       text: receipt?.transactionAmount!.toStringAsFixed(2) ?? '0.00',
     );
-    _paidAmountController = TextEditingController(
-      text: receipt?.paidAmount.toStringAsFixed(2) ?? '0.00',
-    );
+    _paidAmountController = TextEditingController(text: receipt?.paidAmount.toStringAsFixed(2) ?? '0.00');
     _chequeNoController = TextEditingController(text: receipt?.chequeNo ?? '');
     _bankNameController = TextEditingController(text: receipt?.bankName ?? '');
-    _paymentReferenceNoController = TextEditingController(
-      text: receipt?.paymentReferenceNo ?? '',
-    );
+    _paymentReferenceNoController = TextEditingController(text: receipt?.paymentReferenceNo ?? '');
 
     if (receipt != null) {
       _selectedReceiptDate = receipt.receiptDate;
@@ -109,15 +92,13 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
       if (_paymentTypeOptions.contains(receipt.paymentType)) {
         _selectedPaymentType = receipt.paymentType;
       }
-      if (receipt.chequeType != null &&
-          _chequeTypeOptions.contains(receipt.chequeType)) {
+      if (receipt.chequeType != null && _chequeTypeOptions.contains(receipt.chequeType)) {
         _selectedChequeType = receipt.chequeType;
       }
     }
 
     _transactionAmountController.addListener(() {
-      if (_paidAmountController.text.isEmpty ||
-          _paidAmountController.text == '0.00') {
+      if (_paidAmountController.text.isEmpty || _paidAmountController.text == '0.00') {
         _paidAmountController.text = _transactionAmountController.text;
       }
     });
@@ -136,9 +117,7 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
   }
 
   String _generateNewReceiptNo() {
-    final timestamp = DateTime.now().millisecondsSinceEpoch
-        .toString()
-        .substring(7);
+    final timestamp = DateTime.now().millisecondsSinceEpoch.toString().substring(7);
     return 'RCPT-$timestamp';
   }
 
@@ -160,9 +139,7 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
       return const Iterable<Customer>.empty();
     }
     // Assuming ApiV1.getCustomers() returns a List or a Map with a 'data' key holding the List
-    final response =
-        await _api
-            .getCustomers(); // You might want to add a search query parameter here
+    final response = await _api.getCustomers(); // You might want to add a search query parameter here
     if (response != null) {
       List<dynamic>? customerDataList;
       if (response is List) {
@@ -177,9 +154,7 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
             .where(
               (customer) =>
                   customer.name.toLowerCase().contains(query.toLowerCase()) ||
-                  customer.customerCode.toLowerCase().contains(
-                    query.toLowerCase(),
-                  ),
+                  customer.customerCode.toLowerCase().contains(query.toLowerCase()),
             );
       }
     }
@@ -193,10 +168,7 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
       return;
     }
     if (_selectedPaymentType == null) {
-      showVDialog(
-        title: "Validation Error",
-        text: "Please select a payment type.",
-      );
+      showVDialog(title: "Validation Error", text: "Please select a payment type.");
       return;
     }
 
@@ -213,28 +185,19 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
       receiptDate: _selectedReceiptDate,
       paymentType: _selectedPaymentType!,
       debtAmount: double.tryParse(_debtAmountController.text) ?? 0.0,
-      transactionAmount:
-          double.tryParse(_transactionAmountController.text) ?? 0.0,
+      transactionAmount: double.tryParse(_transactionAmountController.text) ?? 0.0,
       paidAmount: double.tryParse(_paidAmountController.text) ?? 0.0,
-      chequeNo:
-          _chequeNoController.text.isNotEmpty ? _chequeNoController.text : null,
+      chequeNo: _chequeNoController.text.isNotEmpty ? _chequeNoController.text : null,
       chequeType: _selectedPaymentType == 'Cheque' ? _selectedChequeType : null,
-      bankName:
-          _bankNameController.text.isNotEmpty ? _bankNameController.text : null,
-      paymentReferenceNo:
-          _paymentReferenceNoController.text.isNotEmpty
-              ? _paymentReferenceNoController.text
-              : null,
+      bankName: _bankNameController.text.isNotEmpty ? _bankNameController.text : null,
+      paymentReferenceNo: _paymentReferenceNoController.text.isNotEmpty ? _paymentReferenceNoController.text : null,
     );
 
     try {
       Map<String, dynamic>? response;
       if (_isEditMode) {
         // You'll need an updateReceipt method in ApiV1
-        response = await _api.updateReceipt(
-          receiptToSave.id ?? 0,
-          receiptToSave.toJson(),
-        );
+        response = await _api.updateReceipt(receiptToSave.id ?? 0, receiptToSave.toJson());
       } else {
         // You'll need a createReceipt method in ApiV1
         response = await _api.createReceipt(receiptToSave.toJson());
@@ -244,30 +207,21 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
         _isLoading = false;
       });
 
-      if (response != null &&
-          (response['error'] != true &&
-              (response['status'] == 200 || response['status'] == 201))) {
+      if (response != null && (response['error'] != true && (response['status'] == 200 || response['status'] == 201))) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               response['message'] ??
-                  (_isEditMode
-                      ? 'Customer updated successfully!'
-                      : 'Customer created successfully!'),
+                  (_isEditMode ? 'Customer updated successfully!' : 'Customer created successfully!'),
             ),
             backgroundColor: Colors.green,
           ),
         );
-        Get.back(
-          result: true,
-        ); // Pop and indicate success to refresh list on previous page
+        Get.back(result: true); // Pop and indicate success to refresh list on previous page
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              response?['message']?.toString() ??
-                  'An error occurred. Please try again.',
-            ),
+            content: Text(response?['message']?.toString() ?? 'An error occurred. Please try again.'),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -276,10 +230,7 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
       setState(() {
         _isLoading = false;
       });
-      showVDialog(
-        title: "Application Error",
-        text: "An error occurred: ${e.toString()}",
-      );
+      showVDialog(title: "Application Error", text: "An error occurred: ${e.toString()}");
     }
   }
 
@@ -289,25 +240,15 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _isEditMode ? 'Edit Customer Receipt' : 'Create Customer Receipt',
-        ),
+        title: Text(_isEditMode ? 'Edit Customer Receipt' : 'Create Customer Receipt'),
         actions: [
           // Simplified to a single save button
           if (!_isLoading)
-            IconButton(
-              icon: const Icon(Icons.save_alt_outlined),
-              onPressed: _saveReceipt,
-              tooltip: 'Save Receipt',
-            )
+            IconButton(icon: const Icon(Icons.save_alt_outlined), onPressed: _saveReceipt, tooltip: 'Save Receipt')
           else
             const Padding(
               padding: EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(color: Colors.white),
-              ),
+              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white)),
             ),
         ],
       ),
@@ -350,35 +291,22 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(FontAwesomeIcons.calendarDay),
                   ),
-                  child: Text(
-                    DateFormat('dd MMM yyyy').format(_selectedReceiptDate),
-                  ),
+                  child: Text(DateFormat('dd MMM yyyy').format(_selectedReceiptDate)),
                 ),
               ),
               const SizedBox(height: 16),
               Autocomplete<Customer>(
-                displayStringForOption:
-                    (Customer option) =>
-                        '${option.customerCode} - ${option.name}',
-                optionsBuilder:
-                    (TextEditingValue textEditingValue) =>
-                        _searchCustomers(textEditingValue.text),
+                displayStringForOption: (Customer option) => '${option.customerCode} - ${option.name}',
+                optionsBuilder: (TextEditingValue textEditingValue) => _searchCustomers(textEditingValue.text),
                 onSelected: (Customer selection) {
                   setState(() {
                     _selectedCustomer = selection;
                   });
                   FocusScope.of(context).unfocus();
                 },
-                fieldViewBuilder: (
-                  context,
-                  fieldTextEditingController,
-                  fieldFocusNode,
-                  onFieldSubmitted,
-                ) {
-                  if (_selectedCustomer != null &&
-                      fieldTextEditingController.text.isEmpty) {
-                    fieldTextEditingController.text =
-                        '${_selectedCustomer!.customerCode} - ${_selectedCustomer!.name}';
+                fieldViewBuilder: (context, fieldTextEditingController, fieldFocusNode, onFieldSubmitted) {
+                  if (_selectedCustomer != null && fieldTextEditingController.text.isEmpty) {
+                    fieldTextEditingController.text = '${_selectedCustomer!.customerCode} - ${_selectedCustomer!.name}';
                   }
                   return TextFormField(
                     controller: fieldTextEditingController,
@@ -404,8 +332,7 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
                     ),
                     validator:
                         (value) =>
-                            (_selectedCustomer == null &&
-                                    (value?.isNotEmpty ?? false))
+                            (_selectedCustomer == null && (value?.isNotEmpty ?? false))
                                 ? 'Please select a valid customer'
                                 : null,
                   );
@@ -424,10 +351,7 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
                             final Customer option = options.elementAt(index);
                             return InkWell(
                               onTap: () => onSelected(option),
-                              child: ListTile(
-                                title: Text(option.customerCode),
-                                subtitle: Text(option.name),
-                              ),
+                              child: ListTile(title: Text(option.customerCode), subtitle: Text(option.name)),
                             );
                           },
                         ),
@@ -446,19 +370,10 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
                 ),
                 items:
                     _paymentTypeOptions
-                        .map(
-                          (String type) => DropdownMenuItem<String>(
-                            value: type,
-                            child: Text(type),
-                          ),
-                        )
+                        .map((String type) => DropdownMenuItem<String>(value: type, child: Text(type)))
                         .toList(),
-                onChanged:
-                    (String? newValue) =>
-                        setState(() => _selectedPaymentType = newValue),
-                validator:
-                    (value) =>
-                        value == null ? 'Please select a payment type' : null,
+                onChanged: (String? newValue) => setState(() => _selectedPaymentType = newValue),
+                validator: (value) => value == null ? 'Please select a payment type' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -468,14 +383,8 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(FontAwesomeIcons.fileInvoiceDollar),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                validator:
-                    (v) =>
-                        (v == null || v.isEmpty || double.tryParse(v) == null)
-                            ? 'Invalid amount'
-                            : null,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: (v) => (v == null || v.isEmpty || double.tryParse(v) == null) ? 'Invalid amount' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -485,9 +394,7 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(FontAwesomeIcons.moneyBillTransfer),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Required';
                   final amount = double.tryParse(v);
@@ -504,9 +411,7 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(FontAwesomeIcons.handHoldingDollar),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Required';
                   final amount = double.tryParse(v);
@@ -526,10 +431,7 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
                   ),
                   validator:
                       (v) =>
-                          (_selectedPaymentType == 'Cheque' &&
-                                  (v == null || v.isEmpty))
-                              ? 'Required for cheque'
-                              : null,
+                          (_selectedPaymentType == 'Cheque' && (v == null || v.isEmpty)) ? 'Required for cheque' : null,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
@@ -541,21 +443,10 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
                   ),
                   items:
                       _chequeTypeOptions
-                          .map(
-                            (String type) => DropdownMenuItem<String>(
-                              value: type,
-                              child: Text(type),
-                            ),
-                          )
+                          .map((String type) => DropdownMenuItem<String>(value: type, child: Text(type)))
                           .toList(),
-                  onChanged:
-                      (String? newValue) =>
-                          setState(() => _selectedChequeType = newValue),
-                  validator:
-                      (value) =>
-                          (_selectedPaymentType == 'Cheque' && value == null)
-                              ? 'Required'
-                              : null,
+                  onChanged: (String? newValue) => setState(() => _selectedChequeType = newValue),
+                  validator: (value) => (_selectedPaymentType == 'Cheque' && value == null) ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -567,10 +458,7 @@ class _ReceiptFormPageState extends State<ReceiptFormPage> {
                   ),
                   validator:
                       (v) =>
-                          (_selectedPaymentType == 'Cheque' &&
-                                  (v == null || v.isEmpty))
-                              ? 'Required for cheque'
-                              : null,
+                          (_selectedPaymentType == 'Cheque' && (v == null || v.isEmpty)) ? 'Required for cheque' : null,
                 ),
                 const SizedBox(height: 16),
               ],

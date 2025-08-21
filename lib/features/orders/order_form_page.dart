@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:kanesanapp/models/customer.dart';
-import 'package:kanesanappp/models/order.dart'; // Ensure this path is correct
-import 'package:kanesanappp/models/order_item.dart'; // Ensure this path is correct
+import 'package:kanesanapp/models/order.dart'; // Ensure this path is correct
+import 'package:kanesanapp/models/order_item.dart'; // Ensure this path is correct
 // Assuming the simple ApiProduct model is still relevant for product selection
 // If not, and you have a richer Product model for local use, adjust accordingly.
 // For this example, we'll keep ApiProduct for the product dropdown.
-// import 'package:kanesanappp/models/product.dart';
-import 'package:kanesanappp/models/global_state.dart'; // For token
-import 'package:kanesanappp/api/api_v1.dart'; // Your API service
-import 'package:kanesanappp/shared/functions.dart'; // For aLog, showVDialog
+// import 'package:kanesanapp/models/product.dart';
+import 'package:kanesanapp/models/global_state.dart'; // For token
+import 'package:kanesanapp/api/api_v1.dart'; // Your API service
+import 'package:kanesanapp/shared/functions.dart'; // For aLog, showVDialog
 
 // Simplified Product model based on API response for product listing
 class ApiProduct {

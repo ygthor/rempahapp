@@ -5,12 +5,12 @@ import 'package:intl/intl.dart';
 
 // Assuming these are the correct paths in your project
 import 'package:kanesanapp/api/api_v1.dart';
-import 'package:kanesanappp/models/global_state.dart';
-import 'package:kanesanappp/models/receipt.dart';
-import 'package:kanesanappp/shared/functions.dart';
+import 'package:kanesanapp/models/global_state.dart';
+import 'package:kanesanapp/models/receipt.dart';
+import 'package:kanesanapp/shared/functions.dart';
 
 // Import your actual form page
-import 'package:kanesanappp/features/receipts/receipt_form_page.dart'; // Adjust path if needed
+import 'package:kanesanapp/features/receipts/receipt_form_page.dart'; // Adjust path if needed
 
 // --- Data Models (These should be in their own files and imported) ---
 class Customer {
@@ -23,10 +23,7 @@ class Customer {
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
       id: json['id'] as int,
-      name:
-          json['company_name'] as String? ??
-          json['name'] as String? ??
-          'Unknown Customer',
+      name: json['company_name'] as String? ?? json['name'] as String? ?? 'Unknown Customer',
       customerCode: json['customer_code'] as String? ?? 'N/A',
     );
   }
@@ -67,8 +64,7 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
     _fetchInitialData(); // Fetch receipts and customers
 
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent - 200 &&
+      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
           _hasMoreItems &&
           !_isLoadingMore) {
         _fetchReceipts();
@@ -90,14 +86,10 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
 
   Future<void> _fetchCustomersForFilter() async {
     final response = await _api.getCustomers();
-    if (response != null &&
-        response is Map<String, dynamic> &&
-        response['data'] is List) {
+    if (response != null && response is Map<String, dynamic> && response['data'] is List) {
       setState(() {
         _filterCustomerOptions =
-            (response['data'] as List)
-                .map((c) => Customer.fromJson(c as Map<String, dynamic>))
-                .toList();
+            (response['data'] as List).map((c) => Customer.fromJson(c as Map<String, dynamic>)).toList();
       });
     }
   }
@@ -122,24 +114,14 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
       final response = await _api.getAllReceipts(
         page: _currentPage,
         customerId: _selectedCustomerFilter?.id.toString(),
-        dateFrom:
-            _selectedDateRange?.start != null
-                ? DateFormat('yyyy-MM-dd').format(_selectedDateRange!.start)
-                : null,
-        dateTo:
-            _selectedDateRange?.end != null
-                ? DateFormat('yyyy-MM-dd').format(_selectedDateRange!.end)
-                : null,
+        dateFrom: _selectedDateRange?.start != null ? DateFormat('yyyy-MM-dd').format(_selectedDateRange!.start) : null,
+        dateTo: _selectedDateRange?.end != null ? DateFormat('yyyy-MM-dd').format(_selectedDateRange!.end) : null,
       );
 
-      if (response != null &&
-          response['error'] != true &&
-          response['data']?['data'] is List) {
+      if (response != null && response['error'] != true && response['data']?['data'] is List) {
         final List<dynamic> receiptDataList = response['data']['data'];
         final List<Receipt> newReceipts =
-            receiptDataList
-                .map((data) => Receipt.fromJson(data as Map<String, dynamic>))
-                .toList();
+            receiptDataList.map((data) => Receipt.fromJson(data as Map<String, dynamic>)).toList();
         final paginationData = response['data'] as Map<String, dynamic>;
 
         setState(() {
@@ -150,8 +132,7 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
         });
       } else {
         setState(() {
-          _errorMessage =
-              response?['message']?.toString() ?? 'Failed to load receipts.';
+          _errorMessage = response?['message']?.toString() ?? 'Failed to load receipts.';
         });
       }
     } catch (e) {
@@ -173,10 +154,7 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
       lastDate: DateTime(2101),
       initialDateRange:
           _selectedDateRange ??
-          DateTimeRange(
-            start: DateTime.now().subtract(const Duration(days: 7)),
-            end: DateTime.now(),
-          ),
+          DateTimeRange(start: DateTime.now().subtract(const Duration(days: 7)), end: DateTime.now()),
     );
     if (picked != null && picked != _selectedDateRange) {
       setState(() => _selectedDateRange = picked);
@@ -203,10 +181,7 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
     return ExpansionTile(
       leading: const Icon(FontAwesomeIcons.filter),
       title: const Text('Filters'),
-      childrenPadding: const EdgeInsets.symmetric(
-        horizontal: 16.0,
-        vertical: 8.0,
-      ),
+      childrenPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       children: [
         DropdownButtonFormField<Customer>(
           value: _selectedCustomerFilter,
@@ -266,10 +241,7 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
           icon: const Icon(Icons.filter_alt_off_outlined),
           label: const Text('Clear All Filters'),
           onPressed: _clearFilters,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.grey.shade300,
-            foregroundColor: Colors.black87,
-          ),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.grey.shade300, foregroundColor: Colors.black87),
         ),
       ],
     );
@@ -284,10 +256,7 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh Receipts',
-            onPressed:
-                (_isLoadingFirstTime || _isLoadingMore)
-                    ? null
-                    : () => _fetchReceipts(isRefresh: true),
+            onPressed: (_isLoadingFirstTime || _isLoadingMore) ? null : () => _fetchReceipts(isRefresh: true),
           ),
         ],
       ),
@@ -300,12 +269,7 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
                 _isLoadingFirstTime
                     ? const Center(child: CircularProgressIndicator())
                     : _errorMessage.isNotEmpty
-                    ? Center(
-                      child: Text(
-                        _errorMessage,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    )
+                    ? Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)))
                     : _receipts.isEmpty
                     ? const Center(child: Text('No receipts found.'))
                     : RefreshIndicator(
@@ -324,46 +288,25 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
                           final receipt = _receipts[index];
                           return Card(
                             elevation: 2.5,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
                             child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                                vertical: 10.0,
-                              ),
-                              leading: CircleAvatar(
-                                child: Icon(FontAwesomeIcons.receipt, size: 20),
-                              ),
-                              title: Text(
-                                receipt.receiptNo,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                              leading: CircleAvatar(child: Icon(FontAwesomeIcons.receipt, size: 20)),
+                              title: Text(receipt.receiptNo, style: const TextStyle(fontWeight: FontWeight.bold)),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const SizedBox(height: 4),
-                                  Text(
-                                    '${receipt.customerCode} - ${receipt.customerName}',
-                                  ),
+                                  Text('${receipt.customerCode} - ${receipt.customerName}'),
                                   const SizedBox(height: 2),
-                                  Text(
-                                    'Date: ${DateFormat('dd MMM yyyy').format(receipt.receiptDate)}',
-                                  ),
+                                  Text('Date: ${DateFormat('dd MMM yyyy').format(receipt.receiptDate)}'),
                                 ],
                               ),
                               trailing: Text(
                                 'RM ${receipt.paidAmount.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColor,
-                                ),
+                                style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
                               ),
-                              onTap:
-                                  () =>
-                                      _navigateToReceiptForm(receipt: receipt),
+                              onTap: () => _navigateToReceiptForm(receipt: receipt),
                             ),
                           );
                         },

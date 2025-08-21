@@ -5,13 +5,13 @@ import 'package:intl/intl.dart';
 import 'package:kanesanapp/features/invoices/invoice_form_page.dart';
 
 // CHANGED: Import the new Invoice model
-import 'package:kanesanappp/models/invoice.dart';
-import 'package:kanesanappp/models/global_state.dart';
-import 'package:kanesanappp/api/api_v1.dart';
-import 'package:kanesanappp/shared/functions.dart';
+import 'package:kanesanapp/models/invoice.dart';
+import 'package:kanesanapp/models/global_state.dart';
+import 'package:kanesanapp/api/api_v1.dart';
+import 'package:kanesanapp/shared/functions.dart';
 
 // CHANGED: Assuming you will create an InvoiceFormPage similar to OrderFormPage
-// import 'package:kanesanappp/features/invoices/invoice_form_page.dart';
+// import 'package:kanesanapp/features/invoices/invoice_form_page.dart';
 
 // NOTE: The OrderItem class is now replaced by ArTransItem and Invoice models in separate files.
 

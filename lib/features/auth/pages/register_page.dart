@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:kanesanapp/features/auth/auth_controller.dart';
-import 'package:kanesanappp/shared/shared.dart';
+import 'package:kanesanapp/shared/shared.dart';
 import 'package:flutter/services.dart';
 
 class LoginPage extends StatefulWidget {
@@ -44,10 +44,7 @@ class _LoginPageState extends State<LoginPage> {
                     width: 100.0,
                     height: 100.0,
                     decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage('assets/images/app_logo.png'),
-                        fit: BoxFit.fill,
-                      ),
+                      image: DecorationImage(image: AssetImage('assets/images/app_logo.png'), fit: BoxFit.fill),
                     ),
                   ),
                 ),
@@ -56,11 +53,7 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   child: Text(
                     'LOGIN',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2.0,
-                      color: Colors.black,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2.0, color: Colors.black),
                   ),
                 ),
               ],
@@ -82,10 +75,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Container(
             decoration: BoxDecoration(color: Colors.white),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 20.0,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
               child: Column(
                 children: [
                   inputTextField(
@@ -94,10 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                     icons: Align(
                       widthFactor: 1.0,
                       heightFactor: 0.5,
-                      child: Icon(
-                        Icons.person,
-                        color: Color.fromARGB(255, 156, 156, 156),
-                      ),
+                      child: Icon(Icons.person, color: Color.fromARGB(255, 156, 156, 156)),
                     ),
                   ),
                   inputTextField(
@@ -107,10 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                     icons: Align(
                       widthFactor: 1.0,
                       heightFactor: 0.5,
-                      child: Icon(
-                        Icons.lock,
-                        color: Color.fromARGB(255, 156, 156, 156),
-                      ),
+                      child: Icon(Icons.lock, color: Color.fromARGB(255, 156, 156, 156)),
                     ),
                   ),
                   Container(
@@ -147,10 +131,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Container(
             decoration: BoxDecoration(color: Colors.white),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 80.0,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 80.0),
               child: Column(
                 children: [
                   inputTextField(
@@ -160,10 +141,7 @@ class _LoginPageState extends State<LoginPage> {
                     icons: Align(
                       widthFactor: 1.0,
                       heightFactor: 0.5,
-                      child: Icon(
-                        Icons.email,
-                        color: Color.fromARGB(255, 156, 156, 156),
-                      ),
+                      child: Icon(Icons.email, color: Color.fromARGB(255, 156, 156, 156)),
                     ),
                   ),
                   inputTextField(
@@ -172,10 +150,7 @@ class _LoginPageState extends State<LoginPage> {
                     icons: Align(
                       widthFactor: 1.0,
                       heightFactor: 0.5,
-                      child: Icon(
-                        Icons.lock,
-                        color: Color.fromARGB(255, 156, 156, 156),
-                      ),
+                      child: Icon(Icons.lock, color: Color.fromARGB(255, 156, 156, 156)),
                     ),
                   ),
                   Container(
@@ -202,13 +177,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget inputTextField({
-    label_name,
-    name,
-    password_field,
-    email = false,
-    icons,
-  }) {
+  Widget inputTextField({label_name, name, password_field, email = false, icons}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0),
       child: SizedBox(
@@ -220,17 +189,11 @@ class _LoginPageState extends State<LoginPage> {
           decoration: InputDecoration(
             prefixIcon: icons,
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: 10,
-              horizontal: 10,
-            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
             floatingLabelBehavior: FloatingLabelBehavior.never,
             fillColor: Color.fromARGB(255, 240, 240, 244),
             filled: true,
-            labelStyle: TextStyle(
-              fontSize: 15,
-              color: Color.fromARGB(255, 156, 156, 156),
-            ),
+            labelStyle: TextStyle(fontSize: 15, color: Color.fromARGB(255, 156, 156, 156)),
             //labelText: 'Company Code',
             labelText: label_name,
             enabledBorder: OutlineInputBorder(

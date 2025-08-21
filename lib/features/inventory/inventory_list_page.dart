@@ -3,8 +3,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // Assuming models and services are in these paths
 import 'package:kanesanapp/api/api_v1.dart';
-import 'package:kanesanappp/models/global_state.dart';
-import 'package:kanesanappp/shared/functions.dart';
+import 'package:kanesanapp/models/global_state.dart';
+import 'package:kanesanapp/shared/functions.dart';
 import 'package:get/get.dart';
 
 // --- Data Model ---
@@ -38,11 +38,7 @@ class InventoryItem {
 }
 
 // Data for dropdowns - these should also be fetched from an API in a real app
-final Map<String, String> _inventoryGroups = {
-  'g1': 'Herbs & Spices',
-  'g2': 'Sauces & Pastes',
-  'g3': 'Grains & Flours',
-};
+final Map<String, String> _inventoryGroups = {'g1': 'Herbs & Spices', 'g2': 'Sauces & Pastes', 'g3': 'Grains & Flours'};
 final Map<String, String> _inventorySubGroups = {
   'sg1_1': 'Whole Spices',
   'sg1_2': 'Ground Spices',
@@ -99,29 +95,15 @@ class _InventoryListPageState extends State<InventoryListPage> {
         inventoryType: _selectedInventoryType,
       );
 
-      if (response != null &&
-          response['error'] != true &&
-          response['data'] is List) {
+      if (response != null && response['error'] != true && response['data'] is List) {
         final List<dynamic> itemsData = response['data'];
         setState(() {
           _filteredInventoryItems =
-              itemsData
-                  .map(
-                    (data) =>
-                        InventoryItem.fromJson(data as Map<String, dynamic>),
-                  )
-                  .toList();
-          _filteredInventoryItems.sort(
-            (a, b) => a.skuCode.compareTo(b.skuCode),
-          );
+              itemsData.map((data) => InventoryItem.fromJson(data as Map<String, dynamic>)).toList();
+          _filteredInventoryItems.sort((a, b) => a.skuCode.compareTo(b.skuCode));
         });
       } else {
-        setState(
-          () =>
-              _errorMessage =
-                  response?['message']?.toString() ??
-                  'Failed to load inventory.',
-        );
+        setState(() => _errorMessage = response?['message']?.toString() ?? 'Failed to load inventory.');
       }
     } catch (e) {
       setState(() => _errorMessage = 'An application error occurred.');
@@ -185,29 +167,18 @@ class _InventoryListPageState extends State<InventoryListPage> {
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _errorMessage.isNotEmpty
-                    ? Center(
-                      child: Text(
-                        _errorMessage,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    )
+                    ? Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)))
                     : _filteredInventoryItems.isEmpty
                     ? Center(
                       child: Text(
                         'No inventory items found for the selected filters.',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey.shade600,
-                        ),
+                        style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                       ),
                     )
                     : RefreshIndicator(
                       onRefresh: _fetchInventory,
                       child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0,
-                          vertical: 8.0,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                         itemCount: _filteredInventoryItems.length,
                         itemBuilder: (context, index) {
                           final item = _filteredInventoryItems[index];
@@ -227,22 +198,15 @@ class _InventoryListPageState extends State<InventoryListPage> {
                                   textAlign: TextAlign.right,
                                   style: TextStyle(
                                     fontSize: 14,
-                                    fontWeight:
-                                        item.quantity > 0
-                                            ? FontWeight.w600
-                                            : FontWeight.normal,
-                                    color:
-                                        item.quantity > 0
-                                            ? Colors.black87
-                                            : Colors.grey.shade600,
+                                    fontWeight: item.quantity > 0 ? FontWeight.w600 : FontWeight.normal,
+                                    color: item.quantity > 0 ? Colors.black87 : Colors.grey.shade600,
                                   ),
                                 ),
                               ),
                             ],
                           );
                         },
-                        separatorBuilder:
-                            (context, index) => const Divider(height: 12),
+                        separatorBuilder: (context, index) => const Divider(height: 12),
                       ),
                     ),
           ),
@@ -262,23 +226,13 @@ class _InventoryListPageState extends State<InventoryListPage> {
               labelText: 'Group',
               hintText: 'All Groups',
               prefixIcon: const Icon(FontAwesomeIcons.layerGroup, size: 18),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             ),
             isExpanded: true,
             items: [
-              const DropdownMenuItem<String>(
-                value: null,
-                child: Text('All Groups'),
-              ),
+              const DropdownMenuItem<String>(value: null, child: Text('All Groups')),
               ..._inventoryGroups.entries
-                  .map(
-                    (e) => DropdownMenuItem<String>(
-                      value: e.key,
-                      child: Text(e.value),
-                    ),
-                  )
+                  .map((e) => DropdownMenuItem<String>(value: e.key, child: Text(e.value)))
                   .toList(),
             ],
             onChanged: _onGroupChanged,
@@ -288,32 +242,16 @@ class _InventoryListPageState extends State<InventoryListPage> {
             value: _selectedSubGroupId,
             decoration: InputDecoration(
               labelText: 'Sub Group',
-              hintText:
-                  _selectedGroupId == null
-                      ? 'Select Group First'
-                      : 'All Sub Groups',
+              hintText: _selectedGroupId == null ? 'Select Group First' : 'All Sub Groups',
               prefixIcon: const Icon(FontAwesomeIcons.objectUngroup, size: 18),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             ),
             isExpanded: true,
-            disabledHint:
-                _selectedGroupId == null
-                    ? const Text("Select Group First")
-                    : null,
+            disabledHint: _selectedGroupId == null ? const Text("Select Group First") : null,
             items: [
-              const DropdownMenuItem<String>(
-                value: null,
-                child: Text('All Sub Groups'),
-              ),
+              const DropdownMenuItem<String>(value: null, child: Text('All Sub Groups')),
               ..._availableSubGroupIds
-                  .map(
-                    (id) => DropdownMenuItem<String>(
-                      value: id,
-                      child: Text(_inventorySubGroups[id] ?? 'Unknown'),
-                    ),
-                  )
+                  .map((id) => DropdownMenuItem<String>(value: id, child: Text(_inventorySubGroups[id] ?? 'Unknown')))
                   .toList(),
             ],
             onChanged: _selectedGroupId != null ? _onSubGroupChanged : null,
@@ -325,24 +263,12 @@ class _InventoryListPageState extends State<InventoryListPage> {
               labelText: 'Inventory Type',
               hintText: 'All Types',
               prefixIcon: const Icon(FontAwesomeIcons.tags, size: 18),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             ),
             isExpanded: true,
             items: [
-              const DropdownMenuItem<String>(
-                value: null,
-                child: Text('All Types'),
-              ),
-              ..._inventoryTypes
-                  .map(
-                    (type) => DropdownMenuItem<String>(
-                      value: type,
-                      child: Text(type),
-                    ),
-                  )
-                  .toList(),
+              const DropdownMenuItem<String>(value: null, child: Text('All Types')),
+              ..._inventoryTypes.map((type) => DropdownMenuItem<String>(value: type, child: Text(type))).toList(),
             ],
             onChanged: _onInventoryTypeChanged,
           ),
@@ -370,11 +296,7 @@ class _InventoryListPageState extends State<InventoryListPage> {
             flex: 3,
             child: Text(
               'SKU Code',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.grey.shade700),
             ),
           ),
           Expanded(
@@ -382,11 +304,7 @@ class _InventoryListPageState extends State<InventoryListPage> {
             child: Text(
               'Quantity',
               textAlign: TextAlign.right,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.grey.shade700),
             ),
           ),
         ],

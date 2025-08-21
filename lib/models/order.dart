@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:kanesanapp/models/order_item.dart';
-import 'package:kanesanappp/shared/functions.dart'; // for parseDoubleFromStringOrNum
+import 'package:kanesanapp/shared/functions.dart'; // for parseDoubleFromStringOrNum
 
 class Order {
   final String? id;

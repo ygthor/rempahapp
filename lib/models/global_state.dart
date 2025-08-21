@@ -3,7 +3,7 @@
 import 'dart:async';
 
 import 'package:kanesanapp/shared/constant.dart';
-import 'package:kanesanappp/shared/functions.dart';
+import 'package:kanesanapp/shared/functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GlobalState {

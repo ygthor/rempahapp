@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:kanesanapp/api/api_v1.dart';
-import 'package:kanesanappp/features/auth/auth_controller.dart';
-import 'package:kanesanappp/models/global_state.dart';
+import 'package:kanesanapp/features/auth/auth_controller.dart';
+import 'package:kanesanapp/models/global_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../shared/shared.dart';

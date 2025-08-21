@@ -5,15 +5,15 @@ import 'package:intl/intl.dart';
 
 // Adjust these import paths if they differ in your project structure
 import 'package:kanesanapp/api/api_v1.dart';
-import 'package:kanesanappp/features/customers/customer_form_page.dart';
-import 'package:kanesanappp/features/customers/widgets/transaction_list.dart';
-import 'package:kanesanappp/features/invoices/invoice_form_page.dart';
-import 'package:kanesanappp/features/orders/order_form_page.dart';
-import 'package:kanesanappp/models/customer.dart';
-import 'package:kanesanappp/models/global_state.dart';
-import 'package:kanesanappp/models/invoice.dart';
-import 'package:kanesanappp/models/order.dart';
-import 'package:kanesanappp/shared/functions.dart';
+import 'package:kanesanapp/features/customers/customer_form_page.dart';
+import 'package:kanesanapp/features/customers/widgets/transaction_list.dart';
+import 'package:kanesanapp/features/invoices/invoice_form_page.dart';
+import 'package:kanesanapp/features/orders/order_form_page.dart';
+import 'package:kanesanapp/models/customer.dart';
+import 'package:kanesanapp/models/global_state.dart';
+import 'package:kanesanapp/models/invoice.dart';
+import 'package:kanesanapp/models/order.dart';
+import 'package:kanesanapp/shared/functions.dart';
 // Import your new placeholder models
 
 // A generic status for transactions

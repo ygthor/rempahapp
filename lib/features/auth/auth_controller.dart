@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
 import 'package:kanesanapp/api/api_v1.dart';
-import 'package:kanesanappp/features/auth/pages/login_page.dart';
-import 'package:kanesanappp/features/dashboard/dashboard_page.dart';
-import 'package:kanesanappp/models/global_state.dart';
-import 'package:kanesanappp/shared/shared.dart';
+import 'package:kanesanapp/features/auth/pages/login_page.dart';
+import 'package:kanesanapp/features/dashboard/dashboard_page.dart';
+import 'package:kanesanapp/models/global_state.dart';
+import 'package:kanesanapp/shared/shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthController {
@@ -16,10 +16,7 @@ class AuthController {
   final formKeyRegister = GlobalKey<FormBuilderState>();
 
   setDefaultFormValue() {
-    formKeyLogin.currentState?.patchValue({
-      'username': 'orangutan',
-      'password': '123123123',
-    });
+    formKeyLogin.currentState?.patchValue({'username': 'orangutan', 'password': '123123123'});
   }
 
   checkLogin() async {
@@ -91,10 +88,7 @@ class AuthController {
       Get.put(GlobalState()); // reset global status
       sp.remove('token');
       sp.remove('api_domain');
-      await showVDialog(
-        title: 'Session Expired',
-        text: "Your session token is invalid, please login again.",
-      );
+      await showVDialog(title: 'Session Expired', text: "Your session token is invalid, please login again.");
       Get.off(const LoginPage());
       return false;
     } else {

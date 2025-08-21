@@ -5,9 +5,9 @@ import 'package:intl/intl.dart';
 import 'package:kanesanapp/features/orders/order_form_page.dart';
 
 // Assuming your models and ApiV1 are in these locations. Adjust paths as needed.
-import 'package:kanesanappp/models/global_state.dart';
-import 'package:kanesanappp/api/api_v1.dart';
-import 'package:kanesanappp/shared/functions.dart';
+import 'package:kanesanapp/models/global_state.dart';
+import 'package:kanesanapp/api/api_v1.dart';
+import 'package:kanesanapp/shared/functions.dart';
 
 import '../../models/order.dart'; // Assuming aLog and showVDialog are here
 

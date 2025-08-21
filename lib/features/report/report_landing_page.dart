@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:kanesanapp/features/report/business_summary_report_page.dart';
-import 'package:kanesanappp/features/report/sales_order_report_page.dart';
+import 'package:kanesanapp/features/report/sales_order_report_page.dart';
 
 // Import your specific report pages here
 // Make sure the path is correct based on your project structure.
@@ -13,12 +13,7 @@ class ReportMenuItem {
   final IconData icon;
   final Widget targetPage; // The page to navigate to
 
-  ReportMenuItem({
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.targetPage,
-  });
+  ReportMenuItem({required this.title, required this.description, required this.icon, required this.targetPage});
 }
 
 // --- Report Landing Page ---
@@ -43,16 +38,13 @@ class _ReportLandingPageState extends State<ReportLandingPage> {
     return [
       ReportMenuItem(
         title: 'Business Summary',
-        description:
-            'View overall sales, collections, and nett sales for a period.',
+        description: 'View overall sales, collections, and nett sales for a period.',
         icon: FontAwesomeIcons.chartPie,
-        targetPage:
-            BusinessSummaryReportPage(), // Navigate to the Business Summary page
+        targetPage: BusinessSummaryReportPage(), // Navigate to the Business Summary page
       ),
       ReportMenuItem(
         title: 'Sales Analysis',
-        description:
-            'Detailed breakdown of sales by product, customer, or region.',
+        description: 'Detailed breakdown of sales by product, customer, or region.',
         icon: FontAwesomeIcons.chartLine,
         targetPage: SalesOrderReportPage(),
       ),
@@ -60,35 +52,26 @@ class _ReportLandingPageState extends State<ReportLandingPage> {
         title: 'Inventory Valuation',
         description: 'Current stock value, aging, and movement summary.',
         icon: FontAwesomeIcons.boxesStacked,
-        targetPage: const PlaceholderReportPage(
-          reportName: 'Inventory Valuation Report',
-        ), // Placeholder
+        targetPage: const PlaceholderReportPage(reportName: 'Inventory Valuation Report'), // Placeholder
       ),
       ReportMenuItem(
         title: 'Customer Debt Aging',
         description: 'Analysis of outstanding customer debts by aging period.',
         icon: FontAwesomeIcons.fileInvoiceDollar,
-        targetPage: const PlaceholderReportPage(
-          reportName: 'Customer Debt Aging Report',
-        ), // Placeholder
+        targetPage: const PlaceholderReportPage(reportName: 'Customer Debt Aging Report'), // Placeholder
       ),
       ReportMenuItem(
         title: 'Profit & Loss Statement',
         description: 'Generate a P&L report for a selected period.',
         icon: FontAwesomeIcons.sackDollar,
-        targetPage: const PlaceholderReportPage(
-          reportName: 'Profit & Loss Statement',
-        ), // Placeholder
+        targetPage: const PlaceholderReportPage(reportName: 'Profit & Loss Statement'), // Placeholder
       ),
       // Add more ReportMenuItem objects for other reports
     ];
   }
 
   void _navigateToReport(BuildContext context, Widget targetPage) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => targetPage),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (context) => targetPage));
   }
 
   @override
@@ -105,28 +88,15 @@ class _ReportLandingPageState extends State<ReportLandingPage> {
           final menuItem = _reportMenuItems[index];
           return Card(
             elevation: 3.0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 12.0,
-              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               leading: CircleAvatar(
-                backgroundColor: Theme.of(
-                  context,
-                ).primaryColorLight.withOpacity(0.5),
+                backgroundColor: Theme.of(context).primaryColorLight.withOpacity(0.5),
                 foregroundColor: Theme.of(context).primaryColorDark,
                 child: FaIcon(menuItem.icon, size: 22),
               ),
-              title: Text(
-                menuItem.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
+              title: Text(menuItem.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Text(
@@ -136,11 +106,7 @@ class _ReportLandingPageState extends State<ReportLandingPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 18,
-                color: Colors.grey,
-              ),
+              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 18, color: Colors.grey),
               onTap: () => _navigateToReport(context, menuItem.targetPage),
             ),
           );

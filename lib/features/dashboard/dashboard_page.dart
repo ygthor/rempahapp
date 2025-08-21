@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:kanesanapp/features/auth/auth_controller.dart';
-import 'package:kanesanappp/features/dashboard/app_drawer.dart';
-import 'package:kanesanappp/shared/constant.dart';
-import 'package:kanesanappp/shared/widgets/date_range_component.dart';
-import 'package:kanesanappp/api/api_v1.dart';
+import 'package:kanesanapp/features/dashboard/app_drawer.dart';
+import 'package:kanesanapp/shared/constant.dart';
+import 'package:kanesanapp/shared/widgets/date_range_component.dart';
+import 'package:kanesanapp/api/api_v1.dart';
 
 import '../../models/global_state.dart';
 

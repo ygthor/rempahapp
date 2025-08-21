@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:kanesanapp/features/auth/auth_controller.dart';
 
-import 'package:kanesanappp/models/global_state.dart'; // Assuming you use GetX for AuthController
+import 'package:kanesanapp/models/global_state.dart'; // Assuming you use GetX for AuthController
 
 // --- Settings Page ---
 class SettingsPage extends StatelessWidget {
@@ -28,9 +28,7 @@ class SettingsPage extends StatelessWidget {
       context: context,
       builder: (BuildContext ctx) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15.0),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
           title: const Row(
             children: [
               Icon(Icons.logout_outlined, color: Colors.redAccent),
@@ -38,9 +36,7 @@ class SettingsPage extends StatelessWidget {
               Text('Confirm Logout'),
             ],
           ),
-          content: const Text(
-            'Are you sure you want to log out of your account?',
-          ),
+          content: const Text('Are you sure you want to log out of your account?'),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
@@ -51,24 +47,16 @@ class SettingsPage extends StatelessWidget {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
               ),
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.white),
-              ),
+              child: const Text('Logout', style: TextStyle(color: Colors.white)),
               onPressed: () {
                 authController.logout();
                 Navigator.of(ctx).pop(); // Close the dialog
                 // Optionally, navigate to login screen if GetX doesn't handle it automatically
                 // Get.offAll(() => LoginPage()); // Example
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('You have been logged out.'),
-                    backgroundColor: Colors.blue,
-                  ),
+                  const SnackBar(content: Text('You have been logged out.'), backgroundColor: Colors.blue),
                 );
               },
             ),
@@ -94,10 +82,7 @@ class SettingsPage extends StatelessWidget {
             title: 'Profile',
             subtitle: 'View and edit your personal information',
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfilePage()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilePage()));
             },
           ),
           const Divider(indent: 70, height: 1),
@@ -107,12 +92,7 @@ class SettingsPage extends StatelessWidget {
             title: 'Update Password',
             subtitle: 'Change your account password',
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const UpdatePasswordPage(),
-                ),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const UpdatePasswordPage()));
             },
           ),
           const Divider(indent: 70, height: 1),
@@ -123,13 +103,9 @@ class SettingsPage extends StatelessWidget {
             subtitle: 'Manage your notification preferences',
             onTap: () {
               // TODO: Navigate to Notification Settings Page
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Notification settings tapped (not implemented).',
-                  ),
-                ),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Notification settings tapped (not implemented).')));
             },
           ),
           const Divider(indent: 70, height: 1),
@@ -140,11 +116,9 @@ class SettingsPage extends StatelessWidget {
             subtitle: 'Review privacy policy and security settings',
             onTap: () {
               // TODO: Navigate to Privacy Settings Page
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Privacy settings tapped (not implemented).'),
-                ),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Privacy settings tapped (not implemented).')));
             },
           ),
           const Divider(height: 30, thickness: 1, indent: 16, endIndent: 16),
@@ -172,39 +146,18 @@ class SettingsPage extends StatelessWidget {
     Color? titleColor,
   }) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 20.0,
-        vertical: 8.0,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
       leading: Container(
         padding: const EdgeInsets.all(10.0),
         decoration: BoxDecoration(
           color: (iconColor ?? Theme.of(context).primaryColor).withOpacity(0.1),
           borderRadius: BorderRadius.circular(10.0),
         ),
-        child: FaIcon(
-          icon,
-          color: iconColor ?? Theme.of(context).primaryColor,
-          size: 20,
-        ),
+        child: FaIcon(icon, color: iconColor ?? Theme.of(context).primaryColor, size: 20),
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 16,
-          color: titleColor,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-      ),
-      trailing: const Icon(
-        Icons.arrow_forward_ios_rounded,
-        size: 16,
-        color: Colors.grey,
-      ),
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: titleColor)),
+      subtitle: Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
       onTap: onTap,
     );
   }
@@ -267,15 +220,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 decoration: InputDecoration(
                   labelText: 'Username',
                   prefixIcon: const Icon(Icons.person_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                validator:
-                    (value) =>
-                        (value == null || value.isEmpty)
-                            ? 'Username cannot be empty'
-                            : null,
+                validator: (value) => (value == null || value.isEmpty) ? 'Username cannot be empty' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -283,14 +230,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 decoration: InputDecoration(
                   labelText: 'Email Address',
                   prefixIcon: const Icon(Icons.email_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value == null || value.isEmpty)
-                    return 'Email cannot be empty';
+                  if (value == null || value.isEmpty) return 'Email cannot be empty';
                   if (!GetUtils.isEmail(value)) return 'Enter a valid email';
                   return null;
                 },
@@ -302,10 +246,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 label: const Text('Save Changes'),
                 onPressed: _saveProfileChanges,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 12,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
               ),
@@ -376,29 +317,14 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                 decoration: InputDecoration(
                   labelText: 'Current Password',
                   prefixIcon: const Icon(Icons.lock_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureCurrentPassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                    onPressed:
-                        () => setState(
-                          () =>
-                              _obscureCurrentPassword =
-                                  !_obscureCurrentPassword,
-                        ),
+                    icon: Icon(_obscureCurrentPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                    onPressed: () => setState(() => _obscureCurrentPassword = !_obscureCurrentPassword),
                   ),
                 ),
                 obscureText: _obscureCurrentPassword,
-                validator:
-                    (value) =>
-                        (value == null || value.isEmpty)
-                            ? 'Please enter your current password'
-                            : null,
+                validator: (value) => (value == null || value.isEmpty) ? 'Please enter your current password' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -406,27 +332,16 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                 decoration: InputDecoration(
                   labelText: 'New Password',
                   prefixIcon: const Icon(Icons.lock_person_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureNewPassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                    onPressed:
-                        () => setState(
-                          () => _obscureNewPassword = !_obscureNewPassword,
-                        ),
+                    icon: Icon(_obscureNewPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                    onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
                   ),
                 ),
                 obscureText: _obscureNewPassword,
                 validator: (value) {
-                  if (value == null || value.isEmpty)
-                    return 'Please enter a new password';
-                  if (value.length < 6)
-                    return 'Password must be at least 6 characters';
+                  if (value == null || value.isEmpty) return 'Please enter a new password';
+                  if (value.length < 6) return 'Password must be at least 6 characters';
                   // Add more complex password rules if needed
                   return null;
                 },
@@ -437,29 +352,16 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                 decoration: InputDecoration(
                   labelText: 'Confirm New Password',
                   prefixIcon: const Icon(Icons.lock_person_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                    onPressed:
-                        () => setState(
-                          () =>
-                              _obscureConfirmPassword =
-                                  !_obscureConfirmPassword,
-                        ),
+                    icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                    onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                   ),
                 ),
                 obscureText: _obscureConfirmPassword,
                 validator: (value) {
-                  if (value == null || value.isEmpty)
-                    return 'Please confirm your new password';
-                  if (value != _newPasswordController.text)
-                    return 'Passwords do not match';
+                  if (value == null || value.isEmpty) return 'Please confirm your new password';
+                  if (value != _newPasswordController.text) return 'Passwords do not match';
                   return null;
                 },
               ),
@@ -469,10 +371,7 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                 label: const Text('Update Password'),
                 onPressed: _submitUpdatePassword,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 12,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
               ),

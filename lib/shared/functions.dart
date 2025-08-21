@@ -11,9 +11,9 @@ import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:kanesanapp/models/global_state.dart';
-import 'package:kanesanappp/plugins/version_checker.dart';
-import 'package:kanesanappp/shared/constant.dart';
-import 'package:kanesanappp/shared/ui.dart';
+import 'package:kanesanapp/plugins/version_checker.dart';
+import 'package:kanesanapp/shared/constant.dart';
+import 'package:kanesanapp/shared/ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 

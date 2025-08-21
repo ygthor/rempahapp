@@ -3,11 +3,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 // Assuming ApiV1 is in a path accessible like this. Adjust if necessary.
 import 'package:kanesanapp/api/api_v1.dart'; // You'll need to import your ApiV1 class
-import 'package:kanesanappp/features/customers/customer_detail_page.dart';
-import 'package:kanesanappp/features/customers/customer_form_page.dart';
-import 'package:kanesanappp/models/customer.dart';
-import 'package:kanesanappp/models/global_state.dart';
-import 'package:kanesanappp/shared/functions.dart';
+import 'package:kanesanapp/features/customers/customer_detail_page.dart';
+import 'package:kanesanapp/features/customers/customer_form_page.dart';
+import 'package:kanesanapp/models/customer.dart';
+import 'package:kanesanapp/models/global_state.dart';
+import 'package:kanesanapp/shared/functions.dart';
 
 class CustomerListPage extends StatefulWidget {
   const CustomerListPage({super.key});
