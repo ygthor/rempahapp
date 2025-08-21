@@ -1,4 +1,4 @@
-import 'package:rempahapp/models/debt_item.dart';
+import 'package:kanesanapp/models/debt_item.dart';
 
 class CustomerDebt {
   final String customerCode;

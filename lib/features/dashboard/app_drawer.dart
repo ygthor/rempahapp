@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:rempahapp/features/auth/auth_controller.dart';
-import 'package:rempahapp/features/customers/customer_list_page.dart';
-import 'package:rempahapp/features/dashboard/dashboard_page.dart';
-import 'package:rempahapp/features/inventory/inventory_list_page.dart';
-import 'package:rempahapp/features/invoices/invoice_list_page.dart';
-import 'package:rempahapp/features/messaging/messaging_landing_page.dart';
-import 'package:rempahapp/features/orders/order_list_page.dart';
-import 'package:rempahapp/features/receipts/receipt_list_page.dart';
-import 'package:rempahapp/features/report/business_summary_report_page.dart';
-import 'package:rempahapp/features/report/report_landing_page.dart';
-import 'package:rempahapp/features/review_collection/debt_list_page.dart';
-import 'package:rempahapp/features/settings/setting_page.dart';
-import 'package:rempahapp/models/global_state.dart';
+import 'package:kanesanapp/features/auth/auth_controller.dart';
+import 'package:kanesanappp/features/customers/customer_list_page.dart';
+import 'package:kanesanappp/features/dashboard/dashboard_page.dart';
+import 'package:kanesanappp/features/inventory/inventory_list_page.dart';
+import 'package:kanesanappp/features/invoices/invoice_list_page.dart';
+import 'package:kanesanappp/features/messaging/messaging_landing_page.dart';
+import 'package:kanesanappp/features/orders/order_list_page.dart';
+import 'package:kanesanappp/features/receipts/receipt_list_page.dart';
+import 'package:kanesanappp/features/report/business_summary_report_page.dart';
+import 'package:kanesanappp/features/report/report_landing_page.dart';
+import 'package:kanesanappp/features/review_collection/debt_list_page.dart';
+import 'package:kanesanappp/features/settings/setting_page.dart';
+import 'package:kanesanappp/models/global_state.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});

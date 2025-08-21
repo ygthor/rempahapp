@@ -4,10 +4,10 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 // Assuming these are the correct paths in your project
-import 'package:rempahapp/api/api_v1.dart';
-import 'package:rempahapp/models/global_state.dart';
-import 'package:rempahapp/models/receipt.dart';
-import 'package:rempahapp/shared/functions.dart'; // For showVDialog
+import 'package:kanesanapp/api/api_v1.dart';
+import 'package:kanesanappp/models/global_state.dart';
+import 'package:kanesanappp/models/receipt.dart';
+import 'package:kanesanappp/shared/functions.dart'; // For showVDialog
 
 // --- Data Models ---
 // Ideally, these would be in their own files (e.g., models/customer.dart, models/receipt.dart)

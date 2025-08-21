@@ -3,7 +3,7 @@
 import 'package:get/get.dart'; // Assuming GetX is used for showVDialog or other utilities
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:rempahapp/models/global_state.dart'; // Assuming this is the correct path
+import 'package:kanesanapp/models/global_state.dart'; // Assuming this is the correct path
 import 'dart:convert';
 import '../shared/shared.dart'; // Assuming this is the correct path for appDomain, aLog, showVDialog
 

@@ -4,16 +4,16 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 // Adjust these import paths if they differ in your project structure
-import 'package:rempahapp/api/api_v1.dart';
-import 'package:rempahapp/features/customers/customer_form_page.dart';
-import 'package:rempahapp/features/customers/widgets/transaction_list.dart';
-import 'package:rempahapp/features/invoices/invoice_form_page.dart';
-import 'package:rempahapp/features/orders/order_form_page.dart';
-import 'package:rempahapp/models/customer.dart';
-import 'package:rempahapp/models/global_state.dart';
-import 'package:rempahapp/models/invoice.dart';
-import 'package:rempahapp/models/order.dart';
-import 'package:rempahapp/shared/functions.dart';
+import 'package:kanesanapp/api/api_v1.dart';
+import 'package:kanesanappp/features/customers/customer_form_page.dart';
+import 'package:kanesanappp/features/customers/widgets/transaction_list.dart';
+import 'package:kanesanappp/features/invoices/invoice_form_page.dart';
+import 'package:kanesanappp/features/orders/order_form_page.dart';
+import 'package:kanesanappp/models/customer.dart';
+import 'package:kanesanappp/models/global_state.dart';
+import 'package:kanesanappp/models/invoice.dart';
+import 'package:kanesanappp/models/order.dart';
+import 'package:kanesanappp/shared/functions.dart';
 // Import your new placeholder models
 
 // A generic status for transactions

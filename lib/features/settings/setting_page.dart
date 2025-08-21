@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:rempahapp/features/auth/auth_controller.dart';
+import 'package:kanesanapp/features/auth/auth_controller.dart';
 
-import 'package:rempahapp/models/global_state.dart'; // Assuming you use GetX for AuthController
+import 'package:kanesanappp/models/global_state.dart'; // Assuming you use GetX for AuthController
 
 // --- Settings Page ---
 class SettingsPage extends StatelessWidget {

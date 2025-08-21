@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 // Assuming ApiV1, Customer, and GlobalState are in these paths. Adjust if necessary.
-import 'package:rempahapp/api/api_v1.dart';
-import 'package:rempahapp/models/customer.dart';
-import 'package:rempahapp/models/global_state.dart';
+import 'package:kanesanapp/api/api_v1.dart';
+import 'package:kanesanappp/models/customer.dart';
+import 'package:kanesanappp/models/global_state.dart';
 
 // CustomerFormPage widget - the main page for the form (ENHANCED WITH API)
 class CustomerFormPage extends StatefulWidget {

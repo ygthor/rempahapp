@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
-import 'package:rempahapp/models/order_item.dart';
-import 'package:rempahapp/shared/functions.dart'; // for parseDoubleFromStringOrNum
+import 'package:kanesanapp/models/order_item.dart';
+import 'package:kanesanappp/shared/functions.dart'; // for parseDoubleFromStringOrNum
 
 class Order {
   final String? id;

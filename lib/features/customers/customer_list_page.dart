@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 // Assuming ApiV1 is in a path accessible like this. Adjust if necessary.
-import 'package:rempahapp/api/api_v1.dart'; // You'll need to import your ApiV1 class
-import 'package:rempahapp/features/customers/customer_detail_page.dart';
-import 'package:rempahapp/features/customers/customer_form_page.dart';
-import 'package:rempahapp/models/customer.dart';
-import 'package:rempahapp/models/global_state.dart';
-import 'package:rempahapp/shared/functions.dart';
+import 'package:kanesanapp/api/api_v1.dart'; // You'll need to import your ApiV1 class
+import 'package:kanesanappp/features/customers/customer_detail_page.dart';
+import 'package:kanesanappp/features/customers/customer_form_page.dart';
+import 'package:kanesanappp/models/customer.dart';
+import 'package:kanesanappp/models/global_state.dart';
+import 'package:kanesanappp/shared/functions.dart';
 
 class CustomerListPage extends StatefulWidget {
   const CustomerListPage({super.key});

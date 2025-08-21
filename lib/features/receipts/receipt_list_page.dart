@@ -4,13 +4,13 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 // Assuming these are the correct paths in your project
-import 'package:rempahapp/api/api_v1.dart';
-import 'package:rempahapp/models/global_state.dart';
-import 'package:rempahapp/models/receipt.dart';
-import 'package:rempahapp/shared/functions.dart';
+import 'package:kanesanapp/api/api_v1.dart';
+import 'package:kanesanappp/models/global_state.dart';
+import 'package:kanesanappp/models/receipt.dart';
+import 'package:kanesanappp/shared/functions.dart';
 
 // Import your actual form page
-import 'package:rempahapp/features/receipts/receipt_form_page.dart'; // Adjust path if needed
+import 'package:kanesanappp/features/receipts/receipt_form_page.dart'; // Adjust path if needed
 
 // --- Data Models (These should be in their own files and imported) ---
 class Customer {

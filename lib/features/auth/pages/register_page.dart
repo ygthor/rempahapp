@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:rempahapp/features/auth/auth_controller.dart';
-import 'package:rempahapp/shared/shared.dart';
+import 'package:kanesanapp/features/auth/auth_controller.dart';
+import 'package:kanesanappp/shared/shared.dart';
 import 'package:flutter/services.dart';
 
 class LoginPage extends StatefulWidget {

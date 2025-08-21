@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:rempahapp/features/report/business_summary_report_page.dart';
-import 'package:rempahapp/features/report/sales_order_report_page.dart';
+import 'package:kanesanapp/features/report/business_summary_report_page.dart';
+import 'package:kanesanappp/features/report/sales_order_report_page.dart';
 
 // Import your specific report pages here
 // Make sure the path is correct based on your project structure.

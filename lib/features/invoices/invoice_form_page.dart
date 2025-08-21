@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:rempahapp/models/customer.dart';
-import 'package:rempahapp/models/invoice.dart';
-import 'package:rempahapp/models/ar_trans_item.dart';
-import 'package:rempahapp/models/global_state.dart';
-import 'package:rempahapp/api/api_v1.dart';
-import 'package:rempahapp/shared/functions.dart';
+import 'package:kanesanapp/models/customer.dart';
+import 'package:kanesanappp/models/invoice.dart';
+import 'package:kanesanappp/models/ar_trans_item.dart';
+import 'package:kanesanappp/models/global_state.dart';
+import 'package:kanesanappp/api/api_v1.dart';
+import 'package:kanesanappp/shared/functions.dart';
 
 // Simplified Product model for selection
 class ApiProduct {

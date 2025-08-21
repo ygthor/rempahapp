@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:rempahapp/features/orders/order_form_page.dart';
+import 'package:kanesanapp/features/orders/order_form_page.dart';
 
 // Assuming your models and ApiV1 are in these locations. Adjust paths as needed.
-import 'package:rempahapp/models/global_state.dart';
-import 'package:rempahapp/api/api_v1.dart';
-import 'package:rempahapp/shared/functions.dart';
+import 'package:kanesanappp/models/global_state.dart';
+import 'package:kanesanappp/api/api_v1.dart';
+import 'package:kanesanappp/shared/functions.dart';
 
 import '../../models/order.dart'; // Assuming aLog and showVDialog are here
 

@@ -2,11 +2,11 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:rempahapp/features/auth/auth_controller.dart';
-import 'package:rempahapp/features/dashboard/app_drawer.dart';
-import 'package:rempahapp/shared/constant.dart';
-import 'package:rempahapp/shared/widgets/date_range_component.dart';
-import 'package:rempahapp/api/api_v1.dart';
+import 'package:kanesanapp/features/auth/auth_controller.dart';
+import 'package:kanesanappp/features/dashboard/app_drawer.dart';
+import 'package:kanesanappp/shared/constant.dart';
+import 'package:kanesanappp/shared/widgets/date_range_component.dart';
+import 'package:kanesanappp/api/api_v1.dart';
 
 import '../../models/global_state.dart';
 

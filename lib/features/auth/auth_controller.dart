@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
-import 'package:rempahapp/api/api_v1.dart';
-import 'package:rempahapp/features/auth/pages/login_page.dart';
-import 'package:rempahapp/features/dashboard/dashboard_page.dart';
-import 'package:rempahapp/models/global_state.dart';
-import 'package:rempahapp/shared/shared.dart';
+import 'package:kanesanapp/api/api_v1.dart';
+import 'package:kanesanappp/features/auth/pages/login_page.dart';
+import 'package:kanesanappp/features/dashboard/dashboard_page.dart';
+import 'package:kanesanappp/models/global_state.dart';
+import 'package:kanesanappp/shared/shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthController {

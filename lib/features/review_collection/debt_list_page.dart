@@ -4,9 +4,9 @@ import 'package:intl/intl.dart';
 import 'dart:async'; // For debounce
 
 // Assuming models and services are in these paths
-import 'package:rempahapp/api/api_v1.dart';
-import 'package:rempahapp/models/global_state.dart';
-import 'package:rempahapp/shared/functions.dart';
+import 'package:kanesanapp/api/api_v1.dart';
+import 'package:kanesanappp/models/global_state.dart';
+import 'package:kanesanappp/shared/functions.dart';
 import 'package:get/get.dart';
 
 // --- Data Models (should be in separate files) ---

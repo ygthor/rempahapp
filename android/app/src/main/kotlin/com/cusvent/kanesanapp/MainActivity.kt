@@ -1,4 +1,4 @@
-package com.cusvent.rempahapp
+package com.cusvent.kanesanapp
 
 import io.flutter.embedding.android.FlutterActivity
 

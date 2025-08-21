@@ -5,8 +5,8 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:rempahapp/features/init_page.dart';
-import 'package:rempahapp/models/global_state.dart';
+import 'package:kanesanapp/features/init_page.dart';
+import 'package:kanesanappp/models/global_state.dart';
 
 import 'shared/ui.dart';
 
@@ -14,7 +14,7 @@ StreamSubscription<ConnectivityResult>? connectivitySubscription;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   Get.put(GlobalState());
 
   GlobalState gs = Get.find();
@@ -88,9 +88,7 @@ class MyApp extends StatelessWidget {
         home: const InitPage(),
 
         //FOR form_builder use
-        supportedLocales: const [
-          Locale('en'),
-        ],
+        supportedLocales: const [Locale('en')],
         // localizationsDelegates: const [
         //   FormBuilderLocalizations.delegate,
         // ],
@@ -100,7 +98,9 @@ class MyApp extends StatelessWidget {
 }
 
 void startGlobalConnectivityListener() {
-  StreamSubscription<List<ConnectivityResult>> subscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> result) {
+  StreamSubscription<List<ConnectivityResult>> subscription = Connectivity().onConnectivityChanged.listen((
+    List<ConnectivityResult> result,
+  ) {
     GlobalState gs = Get.find();
     if (result != ConnectivityResult.none) {
       print('Network is back!');

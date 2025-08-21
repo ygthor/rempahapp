@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:rempahapp/shared/ui.dart';
+import 'package:kanesanapp/shared/ui.dart';
 
 export './widgets/shimmer_placeholder.dart';
-
 
 Widget submitButton({onPressed, String text = '', icon}) {
   icon = icon ?? const Icon(Icons.check);
@@ -19,12 +18,7 @@ Widget submitButton({onPressed, String text = '', icon}) {
         ),
         padding: const EdgeInsets.all(10), // <-- Splash color
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(text),
-        ],
-      ),
+      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Text(text)]),
     ),
   );
 }
